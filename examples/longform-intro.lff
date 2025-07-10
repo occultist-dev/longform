@@ -1,0 +1,82 @@
+
+root::
+  body::
+    header::
+      hgroup::
+        h1::
+          Longform Fragments Spec
+        p::
+          A markup format which generates safe HTML and can
+          be broken into fragments allowing fragments to
+          reference other fragments, or to be exported as
+          many fragments instead of just the root fragment.
+    main::
+      section.toc::
+        h2::
+          Table of Contents
+        ol::
+          li::
+            [#introduction](Introduction)
+          li::
+            [#fragments](Fragments)
+          li::
+            [#elements](Elements)
+          li::
+            [#hypermedia](Hypermedia considerations)
+          li::
+            [#markdown](Markdown)
+
+      #[introduction]
+      #[fragments]
+      #[elements]
+      #[hypermedia]
+      #[markdown]
+
+#introduction
+section::
+  h2::
+    Introducing Longform Fragments
+  p::
+    Longform Fragments is a markup language designed for writing
+    and maintaining longform copy--that might be spread across
+    a webpage or application and hidden behind states--in one place.
+    Software that has parsed a Longform Fragments document can
+    reference each exported fragment by the `id` it is assigned.
+  p::
+    Longform Fragments is intended to be safe to parse and insert
+    into the dom without further sanitizing. It will drop `script`
+    tags and by default prevents most attributes from being set
+    appart from html `id`, `class` and `href`.
+  p::
+    Consideration around HTML's hypermedia tags is documented in
+    more detail in the [#hypermedia](section).
+
+#fragments
+section::
+  h2::
+    Fragments
+  p::
+    Longform Fragments is a whitespace sensitive format. Fragments
+    are defined at the top level of the document, and their content
+    and it's heirachy is defined using tabs under the fragment.
+  p::
+    A document can have a root fragment. This is defined using the
+    `@root` keyword before defining the fragment. A root fragment
+    can appear anywhere in the document and unlike other fragments in
+    the document, it is not required that an `id` is assigned to it.
+
+  p.example::
+    Example:
+  pre::
+    @root
+    #optional-root-id
+    section::
+      h2::
+        This is the Root Fragment.
+
+  p.result::
+    Result:
+  pre::
+    <section id="optional-root-id">
+      <h2>This is the Root Fragment.</h2>
+    </section>
