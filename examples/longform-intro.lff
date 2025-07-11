@@ -76,7 +76,7 @@ section::
   @allowed-elements:: div, span, a[href], my-custom-element[custom-attribute]
   #my-list-id
   ul.this-list.has-many.classes::
-    [aria-label: Test]xc
+    [aria-label: Test]
 
     for item, i of list::
       if item.key == 'test'::
