@@ -51,14 +51,45 @@ section::
     Consideration around HTML's hypermedia tags is documented in
     more detail in the [#hypermedia](section).
 
+    [samp#id-of-element.class-name[data-value="true"][aria-label="Something"]]
+      This [small]code[/small] is [em]formatted with many[/em] styles.
+    [/samp]
+
+  table:
+    caption:: An example table.
+    thead::
+      tr::
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+      tr::
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+      tr::
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+        td[scope="row"]:: Value 1
+
   @force-blank-targets:: true
   @allowed-attributes:: class, data-test
   @allowed-elements:: div, span, a[href], my-custom-element[custom-attribute]
   #my-list-id
   ul.this-list.has-many.classes::
-    [aria-label: Test]
+    [aria-label: Test]xc
 
-    for item of list::
+    for item, i of list::
+      if item.key == 'test'::
+        #{item.listElement}.#{item.key}-#{i}::
+          h3::
+            #{item.name}
+
+          // Content that users may have created. Unallowed attributes and elements
+          // are stripped from the output.
+          ##{item.structuredContent}
+
+          // Anything goes here.
+          ###{item.trustedContent}
 
 #fragments
 section::
