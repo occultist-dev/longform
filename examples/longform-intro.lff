@@ -51,6 +51,15 @@ section::
     Consideration around HTML's hypermedia tags is documented in
     more detail in the [#hypermedia](section).
 
+  @force-blank-targets:: true
+  @allowed-attributes:: class, data-test
+  @allowed-elements:: div, span, a[href], my-custom-element[custom-attribute]
+  #my-list-id
+  ul.this-list.has-many.classes::
+    [aria-label: Test]
+
+    for item of list::
+
 #fragments
 section::
   h2::
