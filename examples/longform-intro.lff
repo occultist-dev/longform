@@ -22,7 +22,7 @@ root::
           li::
             [#elements](Elements)
           li::
-            [#hypermedia](Hypermedia considerations)
+            [#hypermedia](Element considerations)
           li::
             [#markdown](Markdown)
 

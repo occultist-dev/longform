@@ -29,7 +29,6 @@ const r2 =
 
 const reg = new RegExp(
   r1,
-  // `(${parts[0]})|(${parts[1]})|(${parts[2]})`,
   "gm",
 );
 
@@ -91,26 +90,101 @@ type MatchDetails =
   | AtMatchDetails
   | TxtMatchDetails;
 type Fragment = {
+  ident: number;
   root: boolean;
-  id: string;
+  id?: string;
   html: string;
-  parentEls: string[];
+  els: string[];
   pos: number;
-  ends?: number;
+  end?: number;
+};
+enum DefStage {
+  Id,
+  Ele,
+  Att,
+  Chd,
 };
 export type HTMLFragment = string;
-export type IDFragments = Record<string, string>;
-export type BareFragments = Record<string, string>;
+export type IdentFragments = Record<string, string>;
+export type AnonFragments = Record<string, string>;
 export type LongformFragments = {
   root?: HTMLFragment;
-  id: IDFragments;
-  bare: BareFragments;
+  ident: IdentFragments;
+  anon: AnonFragments;
 };
 
+const gth = /\>/g;
+const lth = /\</g;
+function html(text: string) {
+  return text.replace(gth, '&gt;').replace(lth, '&lt;');
+}
+const voids = /(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wrb)/
+
+
 function makeFragments(matches: MatchDetails[]): LongformFragments {
-  let foundRoot = false;
-  const
+  let id: string | undefined;
+  let stage: DefStage | undefined;
+  let current: Fragment = {
+    els: [],
+    html: '',
+    root: false,
+    ident: 0,
+    pos: 0,
+  };
+  let root: HTMLFragment | undefined;
+  const ident: IdentFragments = {};
+  const anon: AnonFragments = {};
   const fragments: Fragment[] = [];
+
+  function closeCurrent() {
+    current.html += `</${current.els.pop()}>`;
+  }
+
+  let index = 0;
+  while (true) {
+    const frag : Partial<Fragment> | undefined;
+    const match = matches[index];
+
+    if (match.ident === current.ident) {
+      if (match.type === 'el') {
+        current.html += `</${current.els.pop()}><${match.el}`;
+
+        let prev = matches[index - 1];
+        if (prev?.type === 'id' && !prev.bare && prev.ident === match.ident) {
+          current.html += ` id="${prev.id}"`;
+        }
+
+        if (match.class != null) {
+          current.html += ` class="${match.class.split('.').join(' ')}"`;
+        }
+
+        if (voids.test(match.el)) {
+          current.html += ` />`;
+        } else {
+          stage = DefStage.Att;
+        }
+      } else if (match.type === 'at') {
+        // attr is invalid here. Treat as text.
+        if (stage === DefStage.Att && match.) {
+          current.html += ` `
+        }
+      }
+    } else if (match.ident > current?.ident) {
+
+    } else if (match.ident < current?.ident) {
+
+    } else {
+      
+    }
+
+    index++;
+  }
+
+  return {
+    root,
+    ident,
+    anon,
+  };
 }
 
 function getMatches(longform: string): MatchDetails[] {
@@ -143,6 +217,7 @@ function getMatches(longform: string): MatchDetails[] {
         type: "at",
         ident,
         label: match.groups.at,
+        value,
       });
     } else if (match.groups.txt != null) {
       const ident = match.groups.wsp.length;
