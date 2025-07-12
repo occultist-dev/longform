@@ -1,8 +1,7 @@
-
 const r1 =
   // id
   `(^(?<wsp>[ \\t]*)` +
-  `(?<id>#(<bare>#)?[\\w\\d\\-_:,.]+)` +
+  `(#(?<bare>#)?(?<id>[\\w\\d\\-_:,.]+))` +
   `[ \\t]*$)` +
   // element
   `|(^(?<wsp>[ \\t]*)` +
@@ -23,42 +22,11 @@ const r1 =
   `(?<txt>.+)` +
   `$)`;
 
-const r2 =
-  // class names
-  `\\.[\\w\\d\\-]+`;
-
 const reg = new RegExp(
   r1,
   "gm",
 );
 
-export function lf(longform: string): LongformFragments {
-  let finished = false;
-  const lines = longform.split("\n");
-
-  do {
-  } while (finished);
-}
-
-const t1 = `\
-root::\t\t
-  #123-my_ID:1,3.
-  div::\t
-    foo.has.many-classes::
-      [active]
-      [active=2]
-      [bar="baz"]
-      [aria-label='Custom element']
-      [aria-label='"Custom element"']
-      [aria-label="'Custom element"]
-
-      p::
-        Some text content.
-      p::
-        And another line.
-
-    At a different level.
-`;
 
 type MatchTypes = "id" | "el" | "at" | "tx";
 type IdMatchDetails = {
@@ -89,20 +57,18 @@ type MatchDetails =
   | ElMatchDetails
   | AtMatchDetails
   | TxtMatchDetails;
+
 type Fragment = {
   ident: number;
   root: boolean;
+  bare: boolean;
   id?: string;
   html: string;
-  els: string[];
+  els: ElMatchDetails[];
+  deps: string[];
+  start: number;
   pos: number;
-  end?: number;
-};
-enum DefStage {
-  Id,
-  Ele,
-  Att,
-  Chd,
+  end: number;
 };
 export type HTMLFragment = string;
 export type IdentFragments = Record<string, string>;
@@ -116,68 +82,159 @@ export type LongformFragments = {
 const gth = /\>/g;
 const lth = /\</g;
 function html(text: string) {
-  return text.replace(gth, '&gt;').replace(lth, '&lt;');
+  return text.replace(gth, "&gt;").replace(lth, "&lt;");
 }
-const voids = /(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wrb)/
+const voids =
+  /(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wrb)/;
 
+function empty(): Fragment {
+  return {
+    els: [],
+    deps: [],
+    html: "",
+    root: false,
+    bare: true,
+    ident: 0,
+    start: 0,
+    pos: -1,
+    end: 0,
+  };
+}
 
 function makeFragments(matches: MatchDetails[]): LongformFragments {
-  let id: string | undefined;
-  let stage: DefStage | undefined;
-  let current: Fragment = {
-    els: [],
-    html: '',
-    root: false,
-    ident: 0,
-    pos: 0,
-  };
+  let current: Fragment = empty();
   let root: HTMLFragment | undefined;
   const ident: IdentFragments = {};
   const anon: AnonFragments = {};
   const fragments: Fragment[] = [];
 
-  function closeCurrent() {
-    current.html += `</${current.els.pop()}>`;
+  function closeEls(targetIdent?: number) {
+    while (
+      current.els.length !== 0 && (
+        targetIdent == null ||
+        current.els[current.els.length - 1].ident !== targetIdent
+      )
+    ) {
+      const element = current.els.pop() as ElMatchDetails;
+
+      current.html += `</${element.el}>`;
+    }
   }
 
   let index = 0;
-  while (true) {
-    const frag : Partial<Fragment> | undefined;
+  while (matches[index] != null) {
     const match = matches[index];
 
-    if (match.ident === current.ident) {
-      if (match.type === 'el') {
-        current.html += `</${current.els.pop()}><${match.el}`;
+    if (match.type === "el") {
+      if (
+        current.els.length !== 0 &&
+        match.ident < current.els[current.els.length - 1].ident
+      ) {
+        closeEls(match.ident);
 
-        let prev = matches[index - 1];
-        if (prev?.type === 'id' && !prev.bare && prev.ident === match.ident) {
-          current.html += ` id="${prev.id}"`;
-        }
-
-        if (match.class != null) {
-          current.html += ` class="${match.class.split('.').join(' ')}"`;
-        }
-
-        if (voids.test(match.el)) {
-          current.html += ` />`;
-        } else {
-          stage = DefStage.Att;
-        }
-      } else if (match.type === 'at') {
-        // attr is invalid here. Treat as text.
-        if (stage === DefStage.Att && match.) {
-          current.html += ` `
+        if (match.ident === 0 && current.pos !== 0) {
+          fragments.push(current);
+          current = empty();
         }
       }
-    } else if (match.ident > current?.ident) {
 
-    } else if (match.ident < current?.ident) {
+      if (match.el === "root" && match.ident === 0) {
+        current.root = true;
+        current.bare = true;
+        index++;
+        continue;
+      }
 
-    } else {
+      const prev = matches[index - 1];
+
+      if (match.ident === 0 && prev.type !== "id") {
+        let next: MatchDetails;
+
+        do {
+          next = matches[index + 1];
+          index++;
+        } while (next != null && next.ident !== 0 && next.type !== "el")
+
+        if (next != null) {
+          break;
+        }
+
+        continue;
+      }
       
+      if (match.ident === 0 && prev.type === "id") {
+        // new fragment
+        
+        if (current.root || current.id != null) {
+          closeEls();
+          fragments.push(current);
+          current = empty();
+        }
+        
+        current.id = prev.id;
+        current.bare = prev.bare;
+      }
+      current.html += `<${match.el}`;
+
+      if (prev?.type === "id" && !prev.bare && prev.ident === match.ident) {
+        current.html += ` id="${prev.id}"`;
+      }
+
+      if (match.class != null) {
+        current.html += ` class="${match.class.split(".").join(" ")}"`;
+      }
+
+      while (matches[index + 1]?.type === "at") {
+        const next = matches[index + 1] as AtMatchDetails;
+
+        current.html += ` ${next.label}`;
+
+        if (next.value != null) {
+          current.html += `="${next.value}"`;
+        }
+        index++;
+      }
+
+      const isVoid = voids.test(match.el);
+
+      if (isVoid) {
+        current.html += ` />`;
+      } else if (
+        matches[index + 1] == null || matches[index + 1].ident <= match.ident
+      ) {
+        // next is not a child
+        current.html += `></${match.el}>`;
+      } else {  
+        current.html += `>`;
+        current.els.push(match);
+      }
+
+      while (matches[index + 1]?.type === "tx") {
+        // add all child text matches, or ignore if void element
+        if (!isVoid) {
+          const next = matches[index + 1] as TxtMatchDetails;
+          current.html += html(next.value);
+        }
+
+        index++;
+      }
     }
 
     index++;
+  }
+
+  closeEls();
+
+  fragments.push(current);
+
+  for (const fragment of fragments) {
+    if (fragment.root) {
+      root = fragment.html;
+    } else if (fragment.bare) {
+      anon[fragment.id as string] = fragment.html;
+    } else {
+      ident[fragment.id as string] = fragment.html;
+    }
   }
 
   return {
@@ -189,7 +246,7 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
 
 function getMatches(longform: string): MatchDetails[] {
   let match: any;
-  let matches: MatchDetails[] = [];
+  const matches: MatchDetails[] = [];
 
   while ((match = reg.exec(longform))) {
     if (match.groups.id != null) {
@@ -233,14 +290,9 @@ function getMatches(longform: string): MatchDetails[] {
   return matches;
 }
 
-Deno.test("lf", async (t) => {
-  await t.step("It finds element definitions", () => {
-    console.log("MATCHING", reg);
-    let matches = getMatches(t1);
+export function longform(text: string): LongformFragments {
+  const matches = getMatches(text);
+  const fragments = makeFragments(matches);
 
-    console.log(JSON.stringify(matches, null, 2));
-  });
-
-  await t.step("It finds id identifiers", () => {
-  });
-});
+  return fragments;
+}

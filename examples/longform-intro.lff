@@ -12,6 +12,10 @@ root::
           many fragments instead of just the root fragment.
     main::
       section.toc::
+        [data-hx-get="/test"]
+
+        This is some text
+
         h2::
           Table of Contents
         ol::
