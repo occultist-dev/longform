@@ -102,6 +102,7 @@ function empty(): Fragment {
 }
 
 function makeFragments(matches: MatchDetails[]): LongformFragments {
+  let foundRoot = false;
   let current: Fragment = empty();
   let root: HTMLFragment | undefined;
   const ident: IdentFragments = {};
@@ -125,99 +126,107 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
   while (matches[index] != null) {
     const match = matches[index];
 
-    if (match.type === "el") {
-      if (
-        current.els.length !== 0 &&
-        match.ident < current.els[current.els.length - 1].ident
-      ) {
-        closeEls(match.ident);
+    if (match.type !== 'el') {
+      index++;
+      continue;
+    }
+    
+    if (
+      current.els.length !== 0 &&
+      match.ident < current.els[current.els.length - 1].ident
+    ) {
+      // close last element if the indent gets shorter
+      closeEls(match.ident);
 
-        if (match.ident === 0 && current.pos !== 0) {
-          fragments.push(current);
-          current = empty();
-        }
+      if (match.ident === 0 && current.pos !== 0) {
+        fragments.push(current);
+        current = empty();
       }
+    }
 
-      if (match.el === "root" && match.ident === 0) {
-        current.root = true;
-        current.bare = true;
+    if (!foundRoot && match.el === "root" && match.ident === 0) {
+      // root element of the document started
+      foundRoot = true;
+      current.root = true;
+      current.bare = true;
+      index++;
+      continue;
+    }
+
+    const prev = matches[index - 1];
+
+    if (match.ident === 0 && (prev.type !== "id" || match.el === 'root')) {
+      // Skip passed top level declarations missing ids or duplicate roots
+      let next: MatchDetails;
+
+      do {
+        next = matches[index + 1];
         index++;
-        continue;
+      } while (next != null && next.ident !== 0 && next.type !== "el")
+
+      if (next != null) {
+        break;
       }
 
-      const prev = matches[index - 1];
-
-      if (match.ident === 0 && prev.type !== "id") {
-        let next: MatchDetails;
-
-        do {
-          next = matches[index + 1];
-          index++;
-        } while (next != null && next.ident !== 0 && next.type !== "el")
-
-        if (next != null) {
-          break;
-        }
-
-        continue;
+      continue;
+    }
+    
+    if (match.ident === 0 && prev.type === "id") {
+      // new fragment started
+      
+      if (current.root || current.id != null) {
+        closeEls();
+        fragments.push(current);
+        current = empty();
       }
       
-      if (match.ident === 0 && prev.type === "id") {
-        // new fragment
-        
-        if (current.root || current.id != null) {
-          closeEls();
-          fragments.push(current);
-          current = empty();
-        }
-        
-        current.id = prev.id;
-        current.bare = prev.bare;
+      current.id = prev.id;
+      current.bare = prev.bare;
+    }
+    
+    current.html += `<${match.el}`;
+
+    if (prev?.type === "id" && !prev.bare && prev.ident === match.ident) {
+      current.html += ` id="${prev.id}"`;
+    }
+
+    if (match.class != null) {
+      current.html += ` class="${match.class.split(".").join(" ")}"`;
+    }
+
+    while (matches[index + 1]?.type === "at") {
+      const next = matches[index + 1] as AtMatchDetails;
+
+      current.html += ` ${next.label}`;
+
+      if (next.value != null) {
+        current.html += `="${next.value}"`;
       }
-      current.html += `<${match.el}`;
+      index++;
+    }
 
-      if (prev?.type === "id" && !prev.bare && prev.ident === match.ident) {
-        current.html += ` id="${prev.id}"`;
+    const isVoid = voids.test(match.el);
+
+    if (isVoid) {
+      current.html += ` />`;
+    } else if (
+      matches[index + 1] == null || matches[index + 1].ident <= match.ident
+    ) {
+      // next is not a child
+      current.html += `></${match.el}>`;
+    } else {  
+      current.html += `>`;
+      current.els.push(match);
+    }
+
+    while (matches[index + 1]?.type === "tx") {
+      // add all child text matches, or ignore if void element
+      if (!isVoid) {
+        const next = matches[index + 1] as TxtMatchDetails;
+        current.html += html(next.value);
       }
 
-      if (match.class != null) {
-        current.html += ` class="${match.class.split(".").join(" ")}"`;
-      }
-
-      while (matches[index + 1]?.type === "at") {
-        const next = matches[index + 1] as AtMatchDetails;
-
-        current.html += ` ${next.label}`;
-
-        if (next.value != null) {
-          current.html += `="${next.value}"`;
-        }
-        index++;
-      }
-
-      const isVoid = voids.test(match.el);
-
-      if (isVoid) {
-        current.html += ` />`;
-      } else if (
-        matches[index + 1] == null || matches[index + 1].ident <= match.ident
-      ) {
-        // next is not a child
-        current.html += `></${match.el}>`;
-      } else {  
-        current.html += `>`;
-        current.els.push(match);
-      }
-
-      while (matches[index + 1]?.type === "tx") {
-        // add all child text matches, or ignore if void element
-        if (!isVoid) {
-          const next = matches[index + 1] as TxtMatchDetails;
-          current.html += html(next.value);
-        }
-
-        index++;
-      }
+      index++;
     }
 
     index++;
