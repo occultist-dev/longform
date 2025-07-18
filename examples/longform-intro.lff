@@ -1,21 +1,39 @@
+@url:: http://example.com/content
+
+@global::
+  @allowed-attributes::
+    aria-*
+  @allowed-elements::
+    a, div, span, p, code, pre, cite
+  @allowed-classes::
+    info, success, warning, error
+    
+@preset::
+  @name:: foo
+  @include:: @global
+  @allowed-elements::
+    div, span, p, code, pre, cite
+    
+@preset::
+  @name:: all
+  @allow-all
+  
+@preset::
+  @name:: none
+  @disallow-all
+
+@preset::
+  @name:: text
+  @text-only
 
 root::
   body::
     header::
       hgroup::
-        h1::
-          Longform Fragments Spec
-        p::
-          A markup format which generates safe HTML and can
-          be broken into fragments allowing fragments to
-          reference other fragments, or to be exported as
-          many fragments instead of just the root fragment.
+        #[page-header]
+        #[header-blurb]
     main::
       section.toc::
-        [data-hx-get="/test"]
-
-        This is some text
-
         h2::
           Table of Contents
         ol::
@@ -35,6 +53,45 @@ root::
       #[elements]
       #[hypermedia]
       #[markdown]
+
+@restrict-all
+@editable
+#page-header-group
+hgroup::
+  @text-only::
+    @min-length:: 3
+    @max-length:: 50
+  @required
+  h1::
+    Longform Spec
+  
+  @omit-when-empty
+  @allowed-elements:: @formatted-text
+  p::
+    A markup language designed to allow combining of copy from trusted and untrusted sources.
+  p::
+    Rules can be
+
+
+@editable
+@text-only::
+  @min-length: 3
+  @max-length:: 50
+#page-header
+h1::
+  Longform Spec
+
+@editable
+@formatted-text-only::
+  @omit-when-empty
+  @max-length:: 100
+#header-blurb
+p::
+  A markup **format which** generates safe HTML and can
+  be [small]broken[/small] into fragments allowing fragments to
+  reference other fragments, or to be exported as
+  many fragments instead of just the root fragment.
+
 
 #introduction
 section::
