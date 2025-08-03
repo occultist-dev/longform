@@ -54,6 +54,26 @@ root::
       #[hypermedia]
       #[markdown]
 
+##loading
+div::
+  i::
+    [data-loading]
+
+o[actions CreateRecipeAction] as r::
+  [loading=#[loading]]
+
+  r[scm:name]::
+    @component:: FormGroup
+      ##{r->edit()}
+
+  r[scm:description]::
+    @component:: FormGroup
+      
+      r->edit()::
+        [component:: @component(EditText)]
+
+
+
 @restrict-all
 @editable
 #page-header-group
