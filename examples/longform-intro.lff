@@ -59,8 +59,9 @@ div::
   i::
     [data-loading]
 
-o[actions CreateRecipeAction] as r::
-  [loading=#[loading]]
+@@test
+o(actions CreateRecipeAction) as r::
+  [loading=#{loading}]
 
   r[scm:name]::
     @component:: FormGroup
