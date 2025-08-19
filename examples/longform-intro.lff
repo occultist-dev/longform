@@ -1,30 +1,34 @@
 @url:: http://example.com/content
+@preamble::
+  @global::
+    @allowed-attributes::
+      aria-*
+    @allowed-elements::
+      a, div, span, p, code, pre, cite
+    @allowed-classes::
+      info, success, warning, error
 
-@global::
-  @allowed-attributes::
-    aria-*
-  @allowed-elements::
-    a, div, span, p, code, pre, cite
-  @allowed-classes::
-    info, success, warning, error
-    
-@preset::
-  @name:: foo
-  @include:: @global
-  @allowed-elements::
-    div, span, p, code, pre, cite
-    
-@preset::
-  @name:: all
-  @allow-all
-  
-@preset::
-  @name:: none
-  @disallow-all
+  @extension::
+    @name:: octiron
+    @allow-redirects: false
 
-@preset::
-  @name:: text
-  @text-only
+  @preset::
+    @name:: foo
+    @include:: @global
+    @allowed-elements::
+      div, span, p, code, pre, cite
+      
+  @preset::
+    @name:: all
+    @allow-all
+    
+  @preset::
+    @name:: none
+    @disallow-all
+
+  @preset::
+    @name:: text
+    @text-only
 
 @extensions::
   @name:: nodes
@@ -160,6 +164,42 @@ root::
       #[elements]
       #[hypermedia]
       #[markdown]
+
+##loading
+div.loading::
+  i.loading-spinner::
+    [data-loading]
+    
+    Loading
+
+@@fallback(o)
+div.fallback-block::
+  div.header::
+    @{o.problemDetails.message || 'Something went wrong'}
+
+@extension:: octiron
+root(o)::
+  o.perform(actions CreateRecipeAction) as action::
+    [loading=#[loading]]
+
+    action.success()::
+      div::
+
+    action.failure()::
+      @{{fallback(r)}}
+
+    @extension::
+      @name:: octiron
+      @allow-redirects: true
+    action.select(scm:name) as name::
+      div.form-group::
+        label::
+          [for=element-id]
+
+          @{r.edit()}
+
+
+
 
 @restrict-all
 @editable
