@@ -26,6 +26,113 @@
   @name:: text
   @text-only
 
+@extensions::
+  @name:: nodes
+  @nodes:: n
+
+@extension::
+  @name:: mithril
+  @hyperscript:: m
+  @allowed-components:: StatePanel
+
+@extension::
+  @name:: octiron
+  @octiron:: o
+  @accept:: application/problem+json, application/ld+json
+  @vocab:: https://schema.occultist.dev
+  @aliases::
+    @match:: https::/schema.org/
+    @key:: scm
+
+root::
+  #[template]
+  #[node-editor]
+  #[recipe-listing]
+
+#rules:: template, math
+div::
+  for x in foo::
+    for key, val of x.baa::
+      #{math::add(x.total, val)}
+
+@rules:: nodes, html, patch, comments
+@input(String)
+@patchable
+#node-editor
+  n(Composition)::
+    [in: input]
+    div::
+      foo bar description...
+
+    ##capital
+    n(Capitalize)::
+      c()::
+        
+
+    n(Octiron) as o::
+      math::reverse(o.value) as v::
+
+
+    ##group-1
+    n(Group)::
+      [in="#capital"]
+      #{n(Split)}
+      #{n(ReverseArray)}
+
+    ##group-2
+    n(Group)
+      [in="#capital"]      
+
+
+
+
+
+@rules:: mithril, octiron, html, patch
+@patchable
+@preset:: foo
+@allowed-all-entities
+#recipe-listing
+div::
+  o.perform(actions ListRecipesAction) as o::
+    [submitOnInit=true]
+
+    div.action-bar::
+      div.action-bar__start::
+        #{o.edit(search)}
+
+    o.failure::
+      m(StatePanel)::
+        #{o.error()}
+
+    o.loading::
+      m(StatePanel)::
+        #{m(LoadingSpinner)}
+
+    o.success() as o::
+      table::
+        caption:: Recipes
+        thead::tr::
+          th:: Name
+          th:: Cooking time
+          th:: Ingredients
+        tbody::
+          o.select(members)
+            tr::
+              td::
+                o.select(scm:name)
+              td::
+                o.select(cookingTimeMinutes)
+              td::
+                o.select(ingredientEntries scm:name)
+                  [sep: ',&nbsp;']
+    
+    div.action-bar::
+      div.action-bar__end::
+        #{o.edit(page)}
+
+
+
+
 root::
   body::
     header::
@@ -88,7 +195,7 @@ h1::
 #header-blurb
 p::
   A markup **format which** generates safe HTML and can
-  be [small]broken[/small] into fragments allowing fragments to
+  be ^broken^ into fragments allowing fragments to
   reference other fragments, or to be exported as
   many fragments instead of just the root fragment.
 
