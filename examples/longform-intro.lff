@@ -216,8 +216,11 @@ hgroup::
   @allowed-elements:: @formatted-text
   p::
     A markup language designed to allow combining of copy from trusted and untrusted sources.
+    <strong id="my-id">thing</strong>
   p::
     Rules can be
+  pre::code::
+
 
 
 @editable
