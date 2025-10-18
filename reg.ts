@@ -47,13 +47,13 @@ export const textReStr =
   `(?<t>.*)$)`;
 
 export const allowedElementsReStr =
-  `(?<e>\\w[\\w\\d\\-_]*<?<g>\\*>?)(\\[(?<a>\\w[\\w\\d\\-_ \\*]*)\\])?`
+  `(?<e>\\w[\\w\\d\\-_]*)(?<g>\\*)?(\\[(?<a>\\w[\\w\\d\\-_ \\*]*)\\])?`
 ;
 export const allowedAttributesReStr =
   `(?<a>\\w[\\w\\d\\-_]*)(?<g>\\*)?`
 
 export const varReStr =
-  `(?v\\w[\\w\\d\\-_]*)`;
+  `(?<v>\\w[\\w\\d\\-_]*)`;
 
 export const lfReg = new RegExp(`${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr}`, 'gm');
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gm');
