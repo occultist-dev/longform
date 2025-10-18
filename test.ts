@@ -1,6 +1,10 @@
 import { longform } from "./lf.ts";
 
+
 const lf = `\
+@set::
+  title:: My title
+
 root::
   main.logged-in::
     header::
@@ -22,9 +26,9 @@ span::
   Activate
 `;
 
+Deno.test('it produces fragments', () => {
+  const fragments = longform(lf);
 
-const fragments = longform(lf);
-
-console.log(fragments);
-
-console.log();
+  console.log(fragments);
+  console.log();
+})

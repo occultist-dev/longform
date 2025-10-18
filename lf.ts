@@ -1,21 +1,36 @@
+
+
+// w = leading whitespace
+// d = Directive identifier, b = Block defining, a = Inline args
+// i = Element id, b = Bare identifer
+// e = Element name, a = Element args, t = Inline text
+// a = Attribute name, v = Attribute value
+// t = Text
+
+const wsp = `^(?<w>[ \\t]*)`;
+const tailText = `(\\s+)|( (<txt>\\S))`;
 const r1 =
   // id
-  `(^(?<wsp>[ \\t]*)` +
-  `(#(?<bare>#)?(?<id>[\\w\\d\\-_:,.]+))` +
+  `(${wsp}` +
+  `(#(?<b>#)?(?<i>[\\w\\d\\-_:,.]+))` +
   `[ \\t]*$)` +
   // element
-  `|(^(?<wsp>[ \\t]*)` +
-  `(?<el>[\\w\\d\\-]+)` +
-  `(?<cls>\\.[\\.\\w\\d\\-]+)?` +
+  `|(${wsp}` +
+  `(?<e>[\\w\\d\\-]+)` +
+  `(?<a>\\.[\\.\\w\\d\\-]+)?` +
   `::[ \\t]*$)` +
   // attribute
-  `|(^(?<wsp>[ \\t]*)` +
-  `\\[(?<at>[\\w\\d\\-]+)` +
+  `|(${wsp}` +
+  `\\[(?<a>[\\w\\d\\-]+)` +
   `(=(` +
-  `('(?<val>["\\w\\d\\- ]+)')` +
-  `|("(?<val>['\\w\\d\\- ]+)")` +
-  `|(?<val>[\\w\\d\\- ]+)` +
+  `('(?<v>["\\w\\d\\- ]+)')` +
+  `|("(?<v>['\\w\\d\\- ]+)")` +
+  `|(?<v>[\\w\\d\\- ]+)` +
   `))?\\]` +
+  `)` +
+  // directive
+  `|(${wsp}` +
+  `(\\@(?<d>[\\w\\d\\-_]+))(?<b>::)?` +
   `)` +
   // text content
   `|(^(?<wsp>[ \\t]*)` +
@@ -27,6 +42,7 @@ const reg = new RegExp(
   "gm",
 );
 
+console.log(reg)
 
 type MatchTypes = "id" | "el" | "at" | "tx";
 type IdMatchDetails = {
@@ -208,7 +224,7 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
     const isVoid = voids.test(match.el);
 
     if (isVoid) {
-      current.html += ` />`;
+      current.html += `>`;
     } else if (
       matches[index + 1] == null || matches[index + 1].ident <= match.ident
     ) {
