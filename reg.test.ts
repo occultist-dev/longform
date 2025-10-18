@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { attributeReStr, directiveReStr, elementReStr, idReStr, textReStr } from "./reg.ts";
+import { allowedAttributesReStr, allowedElementsReStr, attributeReStr, directiveReStr, elementReStr, forOfReStr, idReStr, textReStr } from "./reg.ts";
 
 
 test('It parses directive declarations', () => {
@@ -27,7 +27,7 @@ test('It parses ids', () => {
 
   assert(res?.groups?.w === '');
   assert(res?.groups?.i === 'foo-bar');
-  assert(res?.groups.bare == null);
+  assert(res?.groups?.bare == null);
 });
 
 test('It parses bare ids', () => {
@@ -45,7 +45,7 @@ test('It parses elements', () => {
 
   assert(res?.groups?.w === '    ');
   assert(res?.groups?.e === 'div');
-  assert(res?.groups?.t === '');
+  assert(res?.groups?.t == null);
 });
 
 test('It parses elements with complex definitions', () => {
@@ -90,6 +90,15 @@ test('It parses double quote name value attributes', () => {
   assert(res?.groups?.v == 'Foo bar');
 });
 
+test('It parses for of loops', () => {
+  const re = new RegExp(forOfReStr, 'gm');
+  const res = re.exec('  for abc__123 of foo-bar:: <li>#{abc_123}</li>');
+  
+  assert(res?.groups?.v === 'abc__123');
+  assert(res?.groups?.l == 'foo-bar');
+  assert(res?.groups?.t == '<li>#{abc_123}</li>');
+});
+
 test('It parses text content', () => {
   const re = new RegExp(textReStr);
   const res = re.exec('  <div>Test</div>');
@@ -98,9 +107,56 @@ test('It parses text content', () => {
   assert(res?.groups?.t === '<div>Test</div>')
 });
 
-test('It ignores text content without identaion', () => {
+test('It ignores text content without indentation', () => {
   const re = new RegExp(textReStr);
   const res = re.exec('<div>Test</div>');
 
   assert(res == null)
 });
+
+test('It parses allowed elements', () => {
+  const re = new RegExp(allowedElementsReStr, 'gm');
+  let index = 0;
+  let match: RegExpExecArray | null;
+
+  const lf = `div[aria-*] a[href target] cust-*[v-*]`;
+  while ((match = re.exec(lf))) {
+    if (index === 0) {
+      assert(match?.groups?.e === 'div');
+      assert(match?.groups?.a === 'aria-*');
+      assert(match?.groups?.g == null)
+    } else if (index === 1) {
+      assert(match?.groups?.e === 'a');
+      assert(match?.groups?.a === 'href target')
+      assert(match?.groups?.g == null)
+    } else {
+      assert(match?.groups?.e === 'cust-');
+      assert(match?.groups?.a === 'v-*')
+      assert(match?.groups?.g != null)
+    }
+
+    index++;
+  }
+});
+
+test('It parses allowed attributes', () => {
+  const re = new RegExp(allowedAttributesReStr, 'gm');
+  let index = 0;
+  let match: RegExpExecArray | null;
+
+  const lf = `aria-* href target`;
+  while ((match = re.exec(lf))) {
+    if (index === 0) {
+      assert(match?.groups?.a === 'aria-');
+      assert(match?.groups?.g != null)
+    } else if (index === 1) {
+      assert(match?.groups?.a === 'href');
+      assert(match?.groups?.g == null);
+    } else {
+      assert(match?.groups?.a === 'target');
+      assert(match?.groups?.g == null);
+    }
+
+    index++;
+  }
+})

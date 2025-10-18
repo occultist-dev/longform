@@ -24,12 +24,29 @@ export type Fragments = {
   sets: Record<string, { class: string, elements: string[] }>;
 };
 
+export type SanitizeElement = {
+  name: string;
+  attributes: string[];
+};
+
+export type SanitizeArgs = {
+  elements: Array<string | SanitizeElement>;
+  attributes: string[];
+};
+
+export type SanitizeFn = (html: string, args: SanitizeArgs) => string;
+
+export type Scope = SanitizeArgs & {
+  allowAll: boolean;
+};
+
 export type Element = {
   id: number;
   tag: string;
   class: string;
   attrs: Record<string, string>;
   directives: Record<string, string>;
+  scope: Scope;
 };
 
 export type WorkingFragment = {
@@ -43,6 +60,45 @@ export type WorkingFragment = {
   els: Element[];
   deps: string[];
 };
+
+const voids =
+  /(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wrb)/;
+
+
+export type DirectiveDefinition = {
+  mod?: (scope: Scope) => Scope;
+  output?: (args: string | null, element: Element) => string;
+}
+
+const directives = {
+  'doctype': {
+    output: (args) => {
+      return `<!doctype ${args ?? 'html'} />`;
+    },
+  } as DirectiveDefinition,
+  'root': {},
+  'set': {},
+  'allow-all': {
+    mod: (scope) => {
+      scope.allowAll = true;
+      return scope;
+    }
+  } as DirectiveDefinition,
+  'allow-elements': {
+    mod: (scope) => {
+      scope.allowAll = false;
+      return scope;
+    }
+  },
+  'allow-attributes': {
+
+  },
+  'var': {
+
+  },
+} as const;
+
+const supportedDirectives = Object.keys(directives);
 
 function empty(): WorkingFragment {
   return {
@@ -58,11 +114,9 @@ function empty(): WorkingFragment {
   };
 }
 
-const voids =
-  /(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wrb)/;
-
-export function fragments(
+export function longform(
   longform: string,
+  sanitize: SanitizeFn,
 ): Fragments {
   let current: WorkingFragment = empty();
   let root: string | null = null;
@@ -71,7 +125,7 @@ export function fragments(
   const sets: Record<string, { class: string, elements: string[] }> = {};
   const working: Record<string, WorkingFragment> = {};
 
-  function closeEls(targetIdent: number = 0) {
+  function close(targetIdent: number = 0) {
     while (current.els.length !== targetIdent) {
       current.html += `</${current.els.pop()}>`;
     }
@@ -79,13 +133,12 @@ export function fragments(
 
   lexer(longform, (ident, match) => {
     if (current.ident > ident) {
-      closeEls(ident);
+      close(ident);
     }
 
     if (ident === 0) {
       current = empty();
     }
-    
   });
 
   return {
