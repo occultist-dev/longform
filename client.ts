@@ -1,4 +1,5 @@
 import { lexer } from "./lexer.ts";
+import { allowedAttributesRe, allowedElementsRe, varRe } from "./reg.ts";
 
 export type Fragments = {
   /**
@@ -37,7 +38,9 @@ export type SanitizeArgs = {
 export type SanitizeFn = (html: string, args: SanitizeArgs) => string;
 
 export type Scope = SanitizeArgs & {
+  vars: Record<string, any>;
   allowAll: boolean;
+  context: Record<string, any>;
 };
 
 export type Element = {
@@ -66,39 +69,96 @@ const voids =
 
 
 export type DirectiveDefinition = {
-  mod?: (scope: Scope) => Scope;
+  declarationLevel?: 'root' | 'any';
+  clonesScope?: boolean;
+  mod?: (args: string, scope: Scope, element: Element) => Scope;
   output?: (args: string | null, element: Element) => string;
 }
 
 const directives = {
   'doctype': {
+    declarationLevel: 'root',
     output: (args) => {
-      return `<!doctype ${args ?? 'html'} />`;
+      return `<!doctype ${args ?? 'html'}>`;
     },
   } as DirectiveDefinition,
-  'root': {},
-  'set': {},
+  'root': {
+    declarationLevel: 'root',
+  } as DirectiveDefinition,
+  'set': {
+    declarationLevel: 'root',
+  } as DirectiveDefinition,
   'allow-all': {
-    mod: (scope) => {
+    clonesScope: true,
+    declarationLevel: 'any',
+    mod: (_args, scope) => {
       scope.allowAll = true;
+      scope.elements = [];
+      scope.attributes = [];
+
+      return scope;
+    },
+  } as DirectiveDefinition,
+  'allow-elements': {
+    clonesScope: true,
+    declarationLevel: 'any',
+    mod: (args, scope) => {
+      let match1: RegExpExecArray | null;
+      let match2: RegExpExecArray | null;
+      scope.allowAll = false;
+      scope.elements = [];
+
+      while ((match1 = allowedElementsRe.exec(args))) {
+        if (match1?.groups?.a == null) {
+          scope.elements.push(match1?.groups?.e as string);
+        } else {
+          const element: SanitizeElement = {
+            name: match1.groups.a as string,
+            attributes: [],
+          };
+          
+          while ((match2 = allowedAttributesRe.exec(match1.groups.a))) {
+            element.attributes.push(match2?.groups?.a as string);
+          }
+
+          scope.elements.push(element);
+        }
+      }
+
       return scope;
     }
   } as DirectiveDefinition,
-  'allow-elements': {
-    mod: (scope) => {
-      scope.allowAll = false;
-      return scope;
-    }
-  },
   'allow-attributes': {
+    clonesScope: true,
+    declarationLevel: 'any',
+    mod: (args, scope) => {
+      let match1: RegExpExecArray | null;
 
-  },
+      scope.allowAll = false;
+      scope.attributes = [];
+
+      while ((match1 = allowedAttributesRe.exec(args))) {
+        scope.attributes.push(match1?.groups?.a as string);
+      }
+
+      return scope;
+    } 
+  } as DirectiveDefinition,
   'var': {
+    declarationLevel: 'root',
+    mod(args, scope) {
+      let match: RegExpExecArray | null;
 
-  },
+      while ((match = varRe.exec(args))) {
+        scope.vars[match?.groups?.v as string] = scope.context[match?.groups?.v as string];
+      }
+
+      return scope;
+    },
+  } as DirectiveDefinition,
 } as const;
 
-const supportedDirectives = Object.keys(directives);
+const supportedDirectives = new Set(Object.keys(directives));
 
 function empty(): WorkingFragment {
   return {

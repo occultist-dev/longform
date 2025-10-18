@@ -52,6 +52,10 @@ export const allowedElementsReStr =
 export const allowedAttributesReStr =
   `(?<a>\\w[\\w\\d\\-_]*)(?<g>\\*)?`
 
+export const varReStr =
+  `(?v\\w[\\w\\d\\-_]*)`;
+
 export const lfReg = new RegExp(`${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr}`, 'gm');
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gm');
 export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gm');
+export const varRe = new RegExp(varReStr, 'gm');
