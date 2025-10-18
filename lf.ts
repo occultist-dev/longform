@@ -42,8 +42,6 @@ const reg = new RegExp(
   "gm",
 );
 
-console.log(reg)
-
 type MatchTypes = "id" | "el" | "at" | "tx";
 type IdMatchDetails = {
   type: "id";
