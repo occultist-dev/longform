@@ -9,7 +9,7 @@ test('It parses directive declarations', () => {
 
   assert(res?.groups?.w === '');
   assert(res?.groups?.d === 'set');
-  assert(res?.groups?.a == null);
+  assert(res?.groups?.ia == null);
 });
 
 test('It parses directives with inline args', () => {
@@ -18,7 +18,7 @@ test('It parses directives with inline args', () => {
 
   assert(res?.groups?.w === '  ');
   assert(res?.groups?.d === 'allow-elements');
-  assert(res?.groups?.a === 'div, p, strong  ');
+  assert(res?.groups?.ia === 'div, p, strong  ');
 });
 
 test('It parses ids', () => {
@@ -27,7 +27,7 @@ test('It parses ids', () => {
 
   assert(res?.groups?.w === '');
   assert(res?.groups?.i === 'foo-bar');
-  assert(res?.groups?.bare == null);
+  assert(res?.groups?.b == null);
 });
 
 test('It parses bare ids', () => {

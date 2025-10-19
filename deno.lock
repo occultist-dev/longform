@@ -318,6 +318,13 @@
       "npm:@types/node@^24.8.1",
       "npm:dompurify@^3.3.0",
       "npm:jsdom@^27.0.1"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/node@^24.8.1",
+        "npm:dompurify@^3.3.0",
+        "npm:jsdom@^27.0.1"
+      ]
+    }
   }
 }

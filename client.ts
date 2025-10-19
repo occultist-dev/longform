@@ -25,22 +25,27 @@ export type Fragments = {
   sets: Record<string, { class: string, elements: string[] }>;
 };
 
-export type SanitizeElement = {
+export type SanitizeElementObj = {
   name: string;
   attributes: string[];
 };
 
+export type SanitizeElement =
+  | string
+  | SanitizeElementObj
+;
+
 export type SanitizeArgs = {
-  elements: Array<string | SanitizeElement>;
+  elements: SanitizeElement[];
   attributes: string[];
 };
 
 export type SanitizeFn = (html: string, args: SanitizeArgs) => string;
 
 export type Scope = SanitizeArgs & {
-  vars: Record<string, any>;
+  vars: Record<string, unknown>;
   allowAll: boolean;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
 };
 
 export type Element = {
@@ -81,13 +86,13 @@ const directives = {
     output: (args) => {
       return `<!doctype ${args ?? 'html'}>`;
     },
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'root': {
     declarationLevel: 'root',
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'set': {
     declarationLevel: 'root',
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'allow-all': {
     clonesScope: true,
     declarationLevel: 'any',
@@ -98,7 +103,7 @@ const directives = {
 
       return scope;
     },
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'allow-elements': {
     clonesScope: true,
     declarationLevel: 'any',
@@ -127,7 +132,7 @@ const directives = {
 
       return scope;
     }
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'allow-attributes': {
     clonesScope: true,
     declarationLevel: 'any',
@@ -143,7 +148,7 @@ const directives = {
 
       return scope;
     } 
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
   'var': {
     declarationLevel: 'root',
     mod(args, scope) {
@@ -155,7 +160,7 @@ const directives = {
 
       return scope;
     },
-  } as DirectiveDefinition,
+  } satisfies DirectiveDefinition,
 } as const;
 
 const supportedDirectives = new Set(Object.keys(directives));

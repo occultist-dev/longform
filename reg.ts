@@ -1,11 +1,11 @@
 
 
 // w = leading whitespace
-// d = Directive identifier, a = Inline args
+// d = Directive identifier, ia = Inline args
 // i = Element id, b = Bare identifer
-// e = Element name, a = Element args, t = Inline text
-// a = Attribute name, v = Attribute value
-// l = Loop target, v = Declared var
+// e = Element name, ea = Element args, it = Inline text
+// a = Attribute name, v# = Attribute value
+// l = Loop target, dv = Declared var
 // t = Text
 const wsp = `^(?<w>[ \\t]*)`;
 
@@ -17,28 +17,28 @@ export const directiveReStr =
 
 export const idReStr =
   `(${wsp}` +
-  `(#(?<b>#)?(?<i>[\\w\\d\\-_:,.]+))` +
+  `(#(?<b>#)?(?<ia>[\\w\\d\\-_:,.]+))` +
   `[ \\t]*$)`;
 
 export const elementReStr = 
   `(${wsp}` +
   `(?<e>[\\w\\d\\-]+)` +
-  `(?<a>[#.\\[].*)?::` +
-  `(\\s+| (?<t>.*)+)?$)`;
+  `(?<ea>[#.\\[].*)?::` +
+  `(\\s+| (?<it>.*)+)?$)`;
 
 export const attributeReStr = 
   `(${wsp}` +
   `\\[(?<a>[\\w\\d\\-]+)` +
   `(=(` +
-  `('(?<v>["\\w\\d\\- ]+)')` +
-  `|("(?<v>['\\w\\d\\- ]+)")` +
-  `|(?<v>[\\w\\d\\- ]+)` +
+  `('(?<v1>["\\w\\d\\- ]+)')` +
+  `|("(?<v2>['\\w\\d\\- ]+)")` +
+  `|(?<v3>[\\w\\d\\- ]+)` +
   `))?\\]` +
   `)`;
 
 export const forOfReStr =
   `(${wsp}` +
-  `for\\s+(?<v>\\w[\\w\\d\\-_]*)\\s+` +
+  `for\\s+(?<dv>\\w[\\w\\d\\-_]*)\\s+` +
   `of\\s+(?<l>\\w[\\w\\d\\-_]*)` +
   `::(\\s+| (?<t>.*)+)?$)`;
 
@@ -55,7 +55,7 @@ export const allowedAttributesReStr =
 export const varReStr =
   `(?<v>\\w[\\w\\d\\-_]*)`;
 
-export const lfReg = new RegExp(`${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr}`, 'gm');
+export const lfReg = new RegExp(`(${directiveReStr})|(${idReStr})|(${elementReStr})|(${attributeReStr})|(${textReStr})`, 'gm');
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gm');
 export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gm');
 export const varRe = new RegExp(varReStr, 'gm');
