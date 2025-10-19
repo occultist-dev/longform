@@ -4,6 +4,7 @@ export type DirectiveMatch = ['d', directive: string, args: string | null];
 export type IDMatch = ['i', id: string, bear: boolean];
 export type ElementMatch = ['e', element: string, args: string | null, text: string | null];
 export type AttrMatch = ['a', attr: string, value: string | null]; 
+export type LoopMatch = ['l', list: string, def: string];
 export type TextMatch = ['t', text: string];
 export type LexMatch =
   | DirectiveMatch
@@ -31,7 +32,7 @@ export function lexer(longform: string, handler: LexHandler) {
     if (res.groups.d != null) {
       match[0] = 'd';
       match[1] = res.groups.d;
-      match[2] = res.groups.a ?? null;
+      match[2] = res.groups.ia ?? null;
     } else if (res.groups.i != null) {
       match[0] = 'i';
       match[1] = res.groups.i;
@@ -39,7 +40,8 @@ export function lexer(longform: string, handler: LexHandler) {
     } else if (res.groups.e != null) {
       match[0] = 'e';
       match[1] = res.groups.e;
-      match[2] = res.groups.v;
+      match[2] = res.groups.ea;
+      match[3] = res.groups.it;
     } else if (res.groups.a != null) {
       match[0] = 'a';
       match[1] = res.groups.a;
