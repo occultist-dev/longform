@@ -11,6 +11,7 @@ export type LexMatch =
   | IDMatch
   | ElementMatch
   | AttrMatch
+  | LoopMatch
   | TextMatch
 ;
 
@@ -41,11 +42,15 @@ export function lexer(longform: string, handler: LexHandler) {
       match[0] = 'e';
       match[1] = res.groups.e;
       match[2] = res.groups.ea;
-      match[3] = res.groups.it;
+      match[3] = res.groups.it ?? null;
     } else if (res.groups.a != null) {
       match[0] = 'a';
       match[1] = res.groups.a;
-      match[2] = res.groups.v;
+      match[2] = res.groups.v1 ?? res.groups.v2 ?? res.groups.v3 ?? null;
+    } else if (res.groups.l != null) {
+      match[0] = 'l';
+      match[1] = res.groups.k;
+      match[2] = res.groups.dv;
     } else {
       match[0] = 't';
       match[1] = res.groups.t;

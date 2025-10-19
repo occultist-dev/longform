@@ -84,7 +84,7 @@ test('It parses double quote name value attributes', () => {
   assert(res?.groups?.v2 == 'Foo bar');
 });
 
-test('It parses for of loops', { only: true }, () => {
+test('It parses for of loops', () => {
   const re = new RegExp(forOfReStr, 'gm');
   const res = re.exec('  for abc__123 of foo-bar:: ');
 
@@ -92,9 +92,9 @@ test('It parses for of loops', { only: true }, () => {
   assert(res?.groups?.l == 'foo-bar');
 });
 
-test('It parses text content', () => {
+test('It parses text content', { only: true }, () => {
   const re = new RegExp(textReStr);
-  const res = re.exec('  <div>Test</div>');
+  const res = re.exec('<div>Test</div>');
 
   assert(res?.groups?.t === '<div>Test</div>')
 });
