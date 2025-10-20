@@ -52,9 +52,9 @@ html[lang=en]::
 test('It creates a root element with doctype', () => {
   const res = longform(lf1, {}, sanitize);
 
+
+  console.log('RESULT', res);
   assert(res.root != null)
 
   const doc = new JSDOM(res.root).window.document;
-
-  console.log('RESULT', res);
 });

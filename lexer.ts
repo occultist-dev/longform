@@ -29,7 +29,9 @@ export function lexer(longform: string, handler: LexHandler) {
       continue;
     }
 
-    indent = res.groups.w.length / 2;
+    console.log(res);
+    console.log('WHITESPACE', `'${res.groups.w}'`);
+    indent = res.groups.w != null ? res.groups.w.length / 2 : 0;
     
     if (res.groups.d != null) {
       match[0] = 'd';

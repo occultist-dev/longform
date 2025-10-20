@@ -260,6 +260,7 @@ export function longform(
   function applyIndent(targetIndent: number) {
     console.log('APPLYING INDENT', curElement.tag, curElement.indent, targetIndent);
     if (task === 'global' || curElement.indent === targetIndent) {
+      console.log('SKIPPING', curElement.tag);
       return;
     }
 
@@ -367,7 +368,7 @@ export function longform(
         break;
       }
       case 'e': {
-            task = 'element';
+        task = 'element';
         if (curElement.tag != null) {
           applyIndent(indent);
         }

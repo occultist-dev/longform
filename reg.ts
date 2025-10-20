@@ -5,10 +5,10 @@
 // a = Attribute name, v# = Attribute value
 // l = Loop target, dv = Declared var
 // t = Text
-const wsp = `(?<w>[ \\t]*)`;
+const wsp = `(?<w>[ \\t]+)?`;
 
 export const directiveReStr =
-  `\\@(?<d>\\w[\\w\\d\\-_]+)(::)?(\\s(?<ia>.+))?`;
+  `\\@(?<d>\\w[\\w\\d\\-_]+)((::)? ?(?<ia>.+)?)`;
 
 //  `(\\@(?<d>[\\w\\d\\-_]+))` +
 //  `(\\s+|:: (?<ia>.*)+)?`;
@@ -20,7 +20,7 @@ export const idReStr =
 export const elementReStr = 
   `(?<e>[\\w\\d\\-]+)` +
   `(?<ea>[#.\\[].*)?::` +
-  `( (?<it>.+)|\\s*)`;
+  `( (?<it>.+)| *)`;
 
 export const attributeReStr = 
   `\\[(?<a>[\\w\\d\\-]+)` +
@@ -47,7 +47,7 @@ export const allowedAttributesReStr =
 export const varReStr =
   `(?<v>\\w[\\w\\d\\-_]*)`;
 
-export const lfReg = new RegExp(`^${wsp}((${directiveReStr})|(${idReStr})|(${elementReStr})|(${attributeReStr})|(${textReStr}))$`, 'gmi');
-export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gmi');
-export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gmi');
-export const varRe = new RegExp(varReStr, 'gmi');
+export const lfReg = new RegExp(`${wsp}((${directiveReStr})|(${idReStr})|(${elementReStr})|(${attributeReStr})|(${textReStr}))`, 'gi');
+export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gi');
+export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gi');
+export const varRe = new RegExp(varReStr, 'gi');
