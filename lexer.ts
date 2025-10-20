@@ -15,20 +15,21 @@ export type LexMatch =
   | TextMatch
 ;
 
-export type LexHandler = (ident: number, match: LexMatch) => void;
+export type LexHandler = (indent: number, match: LexMatch) => void;
 
-let ident: number = 0;
+let indent: number = 0;
 const match: LexMatch = new Array(4) as DirectiveMatch;
 
 export function lexer(longform: string, handler: LexHandler) {
   let res: RegExpExecArray | null;
+  let index = 0;
 
   while ((res = lfReg.exec(longform))) {
     if (res?.groups == null) {
       continue;
     }
 
-    ident = res.groups.w.length / 2;
+    indent = res.groups.w.length / 2;
     
     if (res.groups.d != null) {
       match[0] = 'd';
@@ -56,6 +57,11 @@ export function lexer(longform: string, handler: LexHandler) {
       match[1] = res.groups.t;
     }
 
-    handler(ident, match);
+    index++;
+    if (index === 20) {
+      throw new Error('Too much')
+    }
+
+    handler(indent, match);
   }
 }

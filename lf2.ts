@@ -32,24 +32,24 @@ type MatchTypes = "id" | "el" | "at" | "tx";
 type IdMatchDetails = {
   type: "id";
   bare: boolean;
-  ident: number;
+  indent: number;
   id: string;
 };
 type ElMatchDetails = {
   type: "el";
-  ident: number;
+  indent: number;
   el: string;
   class?: string;
 };
 type AtMatchDetails = {
   type: "at";
-  ident: number;
+  indent: number;
   label: string;
   value?: string;
 };
 type TxtMatchDetails = {
   type: "tx";
-  ident: number;
+  indent: number;
   value: string;
 };
 type MatchDetails =
@@ -59,7 +59,7 @@ type MatchDetails =
   | TxtMatchDetails;
 
 type Fragment = {
-  ident: number;
+  indent: number;
   root: boolean;
   bare: boolean;
   id?: string;
@@ -71,11 +71,11 @@ type Fragment = {
   end: number;
 };
 export type HTMLFragment = string;
-export type IdentFragments = Record<string, string>;
+export type indentFragments = Record<string, string>;
 export type AnonFragments = Record<string, string>;
 export type LongformFragments = {
   root?: HTMLFragment;
-  ident: IdentFragments;
+  indent: indentFragments;
   anon: AnonFragments;
 };
 
@@ -94,7 +94,7 @@ function empty(): Fragment {
     html: "",
     root: false,
     bare: true,
-    ident: 0,
+    indent: 0,
     start: 0,
     pos: -1,
     end: 0,
@@ -105,15 +105,15 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
   let foundRoot = false;
   let current: Fragment = empty();
   let root: HTMLFragment | undefined;
-  const ident: IdentFragments = {};
+  const indent: indentFragments = {};
   const anon: AnonFragments = {};
   const fragments: Fragment[] = [];
 
-  function closeEls(targetIdent?: number) {
+  function closeEls(targetindent?: number) {
     while (
       current.els.length !== 0 && (
-        targetIdent == null ||
-        current.els[current.els.length - 1].ident !== targetIdent
+        targetindent == null ||
+        current.els[current.els.length - 1].indent !== targetindent
       )
     ) {
       const element = current.els.pop() as ElMatchDetails;
@@ -133,18 +133,18 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
     
     if (
       current.els.length !== 0 &&
-      match.ident < current.els[current.els.length - 1].ident
+      match.indent < current.els[current.els.length - 1].indent
     ) {
       // close last element if the indent gets shorter
-      closeEls(match.ident);
+      closeEls(match.indent);
 
-      if (match.ident === 0 && current.pos !== 0) {
+      if (match.indent === 0 && current.pos !== 0) {
         fragments.push(current);
         current = empty();
       }
     }
 
-    if (!foundRoot && match.el === "root" && match.ident === 0) {
+    if (!foundRoot && match.el === "root" && match.indent === 0) {
       // root element of the document started
       foundRoot = true;
       current.root = true;
@@ -155,14 +155,14 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
 
     const prev = matches[index - 1];
 
-    if (match.ident === 0 && (prev.type !== "id" || match.el === 'root')) {
+    if (match.indent === 0 && (prev.type !== "id" || match.el === 'root')) {
       // Skip passed top level declarations missing ids or duplicate roots
       let next: MatchDetails;
 
       do {
         next = matches[index + 1];
         index++;
-      } while (next != null && next.ident !== 0 && next.type !== "el")
+      } while (next != null && next.indent !== 0 && next.type !== "el")
 
       if (next != null) {
         break;
@@ -171,7 +171,7 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
       continue;
     }
     
-    if (match.ident === 0 && prev.type === "id") {
+    if (match.indent === 0 && prev.type === "id") {
       // new fragment started
       
       if (current.root || current.id != null) {
@@ -186,7 +186,7 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
     
     current.html += `<${match.el}`;
 
-    if (prev?.type === "id" && !prev.bare && prev.ident === match.ident) {
+    if (prev?.type === "id" && !prev.bare && prev.indent === match.indent) {
       current.html += ` id="${prev.id}"`;
     }
 
@@ -210,7 +210,7 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
     if (isVoid) {
       current.html += ` />`;
     } else if (
-      matches[index + 1] == null || matches[index + 1].ident <= match.ident
+      matches[index + 1] == null || matches[index + 1].indent <= match.indent
     ) {
       // next is not a child
       current.html += `></${match.el}>`;
@@ -242,13 +242,13 @@ function makeFragments(matches: MatchDetails[]): LongformFragments {
     } else if (fragment.bare) {
       anon[fragment.id as string] = fragment.html;
     } else {
-      ident[fragment.id as string] = fragment.html;
+      indent[fragment.id as string] = fragment.html;
     }
   }
 
   return {
     root,
-    ident,
+    indent,
     anon,
   };
 }
@@ -259,38 +259,38 @@ function getMatches(longform: string): MatchDetails[] {
 
   while ((match = reg.exec(longform))) {
     if (match.groups.id != null) {
-      const ident = match.groups.wsp.length;
+      const indent = match.groups.wsp.length;
 
       matches.push({
         type: "id",
         bare: match.groups.bare != null,
-        ident,
+        indent,
         id: match.groups.id,
       });
     } else if (match.groups.el != null) {
-      const ident = match.groups.wsp.length;
+      const indent = match.groups.wsp.length;
 
       matches.push({
         type: "el",
-        ident,
+        indent,
         el: match.groups.el,
       });
     } else if (match.groups.at != null) {
-      const ident = match.groups.wsp.length;
+      const indent = match.groups.wsp.length;
       const value = match.groups.val;
 
       matches.push({
         type: "at",
-        ident,
+        indent,
         label: match.groups.at,
         value,
       });
     } else if (match.groups.txt != null) {
-      const ident = match.groups.wsp.length;
+      const indent = match.groups.wsp.length;
       const value = match.groups.txt;
       matches.push({
         type: "tx",
-        ident,
+        indent,
         value,
       });
     }

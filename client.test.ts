@@ -38,16 +38,23 @@ function sanitize(html: string, args: SanitizeArgs): string {
 
 
 const lf1 = `\
-@doctype
-@root
-html::
+@global::
+  @allow-all
+
+@doctype:: html
+@root::
+html[lang=en]::
   head::
-    title:: Longform with doctype
+    title:: Longform with doctype 1
   body::
-    h1:: Longform with doctype
+    h1:: Longform with doctype 2
 `;
 test('It creates a root element with doctype', () => {
-  const res = longform(lf1, sanitize);
+  const res = longform(lf1, {}, sanitize);
 
-  console.log(res);
+  assert(res.root != null)
+
+  const doc = new JSDOM(res.root).window.document;
+
+  console.log('RESULT', res);
 });
