@@ -17,5 +17,10 @@
     "@types/node": "^24.8.1",
     "dompurify": "^3.3.0",
     "jsdom": "^27.0.1"
+  },
+  "dependencies": {
+    "marked": "^16.4.1",
+    "prettier": "^3.6.2",
+    "vnu-jar": "^24.10.17"
   }
 }

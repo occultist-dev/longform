@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      vnu-jar:
+        specifier: ^24.10.17
+        version: 24.10.17
     devDependencies:
       '@types/jsdom':
         specifier: ^27.0.0
@@ -214,6 +218,10 @@ packages:
 
   undici-types@7.14.0:
     resolution: {integrity: sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==}
+
+  vnu-jar@24.10.17:
+    resolution: {integrity: sha512-YT7gNrRY5PiJrI1GavlWRHWIwqq2o52COc6J9QeXPfoldKRiZ9BeGP4shNLLaVfi0naA+/LMksdYWkKCr4pnVg==}
+    engines: {node: '>=0.10'}
 
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
@@ -456,6 +464,8 @@ snapshots:
       punycode: 2.3.1
 
   undici-types@7.14.0: {}
+
+  vnu-jar@24.10.17: {}
 
   w3c-xmlserializer@5.0.0:
     dependencies:

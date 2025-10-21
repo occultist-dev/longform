@@ -29,8 +29,6 @@ export function lexer(longform: string, handler: LexHandler) {
       continue;
     }
 
-    console.log(res);
-    console.log('WHITESPACE', `'${res.groups.w}'`);
     indent = res.groups.w != null ? res.groups.w.length / 2 : 0;
     
     if (res.groups.d != null) {

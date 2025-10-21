@@ -1,5 +1,5 @@
 import { lexer } from "./lexer.ts";
-import { allowedAttributesRe, allowedElementsRe, attributeReStr, elementReStr, varRe } from "./reg.ts";
+import { allowedAttributesRe, allowedElementsRe, paramsRe, varRe } from "./reg.ts";
 
 export type Fragments = {
   /**
@@ -53,7 +53,7 @@ export type Element = {
   id?: string;
   tag?: string;
   class?: string;
-  attrs: Record<string, string>;
+  attrs: Record<string, string | undefined>;
   text?: string;
   indent: number;
   defined: boolean;
@@ -63,6 +63,7 @@ export type Element = {
 
 export type WorkingFragment = {
   root: boolean;
+  id?: string;
   bare: boolean;
   indent: number;
   start: number;
@@ -107,9 +108,6 @@ const directives = {
     output: (args) => {
       return `<!doctype ${args ?? 'html'}>`;
     },
-  } satisfies DirectiveDefinition,
-  'root': {
-    declarationLevel: 'root',
   } satisfies DirectiveDefinition,
   'set': {
     declarationLevel: 'root',
@@ -258,37 +256,25 @@ export function longform(
    * a new element.
    */
   function applyIndent(targetIndent: number) {
-    console.log('APPLYING INDENT', curElement.tag, curElement.indent, targetIndent);
     if (task === 'global' || curElement.indent === targetIndent) {
-      console.log('SKIPPING', curElement.tag);
       return;
     }
 
     if (curElement.tag != null) {
-      console.log('DECLARING TAG', curElement.tag);
       curFragment.html += `<${curElement.tag}`
 
-      if (curElement.attrs) {
-        console.log(curElement.attrs);
+      if (curElement.id != null) {
+        curFragment.html += ' id="' + curFragment.id + '"';
+      }
+
+      if (curElement.class != null) {
+        curFragment.html += ' class="' + curElement.class + '"';
       }
 
       for (const attr of Object.entries(curElement.attrs)) {
-        let allowed = false;
-        if (!curElement.scope.attributes.includes(attr[0]))
-          break;
-
-        // @todo:: Might be able to index the elements somehow
-        for (let i = 0; i < curElement.scope.elements.length; i++) {
-          const element = curElement.scope.elements[i];
-          
-          if (typeof element === 'string' || element.name !== curElement.tag)
-            continue;
-
-          allowed = true;
-          break;
-        }
-
-        if (allowed) {
+        if (attr[1] == null) {
+          curFragment.html += ' ' + attr[0]
+        } else {
           curFragment.html += ` ${attr[0]}="${attr[1]}"`;
         }
       }
@@ -309,8 +295,6 @@ export function longform(
     
     curElement = newElement(targetIndent, curElement.scope)
 
-    console.log(curFragment.html);
-
     if (targetIndent <= curElement.indent) {
       close(targetIndent - 1);
 
@@ -322,9 +306,9 @@ export function longform(
   }
   
   lexer(longform, (indent, match) => {
-    console.log(indent, match);
+    let paramsMatch: RegExpExecArray | null;
+
     switch (match[0]) {
-      // directive
       case 'd': {
         if (!supportedDirectives.has(match[1])) {
           break;
@@ -368,16 +352,44 @@ export function longform(
         break;
       }
       case 'e': {
-        task = 'element';
-        if (curElement.tag != null) {
+        if (curElement.tag != null || task === 'text') {
+          task = 'element';
           applyIndent(indent);
+        } else {
+          task = 'element';
+        }
+
+        if (indent === 0 && curElement.id == null) {
+          curFragment.root = true;
+        } else if (indent === 0) {
+          curFragment.id = curElement.id;
+          curFragment.bare = false;
         }
 
         task = 'element';
         curElement.indent = indent;
         curElement.tag = match[1];
         curElement.defined = true;
-        curElement.text = match[3]
+
+        if (match[2] != null) {
+          while ((paramsMatch = paramsRe.exec(match[2]))) {
+            if (paramsMatch.groups?.i != null && curElement.id == null) {
+              curElement.id = paramsMatch.groups.i;
+            } else if (paramsMatch.groups?.c != null) {
+              if (curElement.class == null) {
+                curElement.class = paramsMatch.groups.c;
+              } else {
+                curElement.class += ' ' + paramsMatch.groups.c;
+              }
+            } else if (paramsMatch.groups?.a != null) {
+              curElement.attrs[paramsMatch.groups.a] = paramsMatch.groups?.v;
+            }
+          }
+        }
+        
+        if (match[3] != null) {
+          curElement.text = match[3]
+        }
 
         break;
       }
@@ -389,7 +401,13 @@ export function longform(
         if (curElement.tag != null) {
           applyIndent(indent);
         }
-        curFragment.html += match[1];
+
+        if (task === 'element') {
+        curFragment.html += match[1].trim();
+        } else if (task === 'text') {
+          curFragment.html += ' ' + match[1].trim();
+        }
+        task = 'text';
       }
     }
   });
@@ -400,6 +418,8 @@ export function longform(
   for (;i < fragments.length; i++) {
     if (fragments[i].root) {
       root = fragments[i].html;
+    } else if (!fragments[i].bare && fragments[i].id != null) {
+      ided[fragments[i].id] = fragments[i].html;
     }
   }
 

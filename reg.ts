@@ -10,9 +10,6 @@ const wsp = `(?<w>[ \\t]+)?`;
 export const directiveReStr =
   `\\@(?<d>\\w[\\w\\d\\-_]+)((::)? ?(?<ia>.+)?)`;
 
-//  `(\\@(?<d>[\\w\\d\\-_]+))` +
-//  `(\\s+|:: (?<ia>.*)+)?`;
-
 export const idReStr =
   `(#(?<b>#)?(?<i>[\\w\\d\\-_:,.]+))` +
   `[ \\t]*`;
@@ -33,7 +30,7 @@ export const attributeReStr =
 export const forOfReStr =
   `for\\s+(?<dv>\\w[\\w\\d\\-_]*)\\s+` +
   `of\\s+(?<l>\\w[\\w\\d\\-_]*)` +
-  `::\\s*`;
+  `::\\[ \\t]*`;
 
 export const textReStr =
   `(?<t>.+)`;
@@ -47,7 +44,11 @@ export const allowedAttributesReStr =
 export const varReStr =
   `(?<v>\\w[\\w\\d\\-_]*)`;
 
+export const paramsReStr =
+  `(#(?<i>[^.[]+))|(\\.(?<c>[^#\\.[]+))|((\\[(?<a>[^.=\\]]+))(=(?<v>[^\\]]+))?)`
+
 export const lfReg = new RegExp(`${wsp}((${directiveReStr})|(${idReStr})|(${elementReStr})|(${attributeReStr})|(${textReStr}))`, 'gi');
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gi');
 export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gi');
 export const varRe = new RegExp(varReStr, 'gi');
+export const paramsRe = new RegExp(paramsReStr, 'gi');
