@@ -10,6 +10,7 @@ import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
+import { rangeStartStr } from "./reg.ts";
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -70,11 +71,18 @@ async function validate(html: string): Promise<boolean> {
   });
 }
 
+function wrapHead(html: string): string {
+  return `<!doctype html><html lang=en><head>${html}</head><body><h1>Test</h1></body></html>`;
+}
+
 function wrapBody(html: string): string {
-  return `<!doctype html><head><title>Test</title></head><body>${html}</body>`;
+  return `<!doctype html><html lang=en><head><title>Test</title></head><body>${html}</body></html>`;
 }
 
 const lf1 = `
+#ignored-in-test
+p:: Ignore me.
+
 @doctype:: html
 html[lang=en]::
   head::
@@ -89,11 +97,12 @@ const html1 = `\
 <body><h1>Longform h1</h1></body></html>`;
 
 test('It creates a root element with doctype', async () => {
-  const res = longform(lf1, {}, sanitize);
+  const res = longform(lf1);
+  const html = res.root as string;
 
-  assert(res.root != null);
-  assert(res.root == html1)
-  assert(await validate(res.root));
+  assert(await validate(html));
+  assert(html != null);
+  assert(html == html1)
 });
 
 const lf2 = `\
@@ -118,9 +127,31 @@ longform syntax, <strong>but they have to be \
 allowed using longform directives</strong>.</p>\
 </div>`;
 test('It creates an ided element with inline html copy', async () => {
-  const res = longform(lf2, {}, sanitize);
-  const html = res.ided['page-info'];
+  const res = longform(lf2);
+  const html = res.fragments['page-info'].html;
 
-  assert.equal(html, html2);
   assert(await validate(wrapBody(html)));
+  assert.equal(html, html2);
 });
+
+const lf3 = `
+#head [
+  title:: My Longform Test
+  meta::
+    [name=description]
+    [content=This tests the validity and correctness of the longform output]
+]
+`;
+const html3 = `\
+<title>My Longform Test</title>\
+<meta name="description" content="This tests the validity and correctness of the longform output">\
+`;
+test('It creates a range of elements', { only: true }, async () => {
+  const res = longform(lf3);
+  const html = res.fragments['head'].html as string;
+  console.log(html);
+
+  assert(await validate(wrapHead(html)));
+  assert.equal(html, html3);
+});
+

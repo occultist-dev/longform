@@ -2,6 +2,8 @@ import { lfReg } from "./reg.ts";
 
 export type DirectiveMatch = ['d', directive: string, args: string | null];
 export type IDMatch = ['i', id: string, bear: boolean];
+export type RangeStartMatch = ['r', id: string];
+export type RangeEndMatch = ['re'];
 export type ElementMatch = ['e', element: string, args: string | null, text: string | null];
 export type AttrMatch = ['a', attr: string, value: string | null]; 
 export type LoopMatch = ['l', list: string, def: string];
@@ -9,6 +11,8 @@ export type TextMatch = ['t', text: string];
 export type LexMatch =
   | DirectiveMatch
   | IDMatch
+  | RangeStartMatch
+  | RangeEndMatch
   | ElementMatch
   | AttrMatch
   | LoopMatch
@@ -39,6 +43,11 @@ export function lexer(longform: string, handler: LexHandler) {
       match[0] = 'i';
       match[1] = res.groups.i;
       match[2] = res.groups.b != null;
+    } else if (res.groups.r != null) {
+      match[0] = 'r';
+      match[1] = res.groups.r;
+    } else if (res.groups.re != null) {
+      match[0] = 're';
     } else if (res.groups.e != null) {
       match[0] = 'e';
       match[1] = res.groups.e;

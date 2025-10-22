@@ -1,28 +1,41 @@
 import { lexer } from "./lexer.ts";
-import { allowedAttributesRe, allowedElementsRe, paramsRe, varRe } from "./reg.ts";
+import { paramsRe } from "./reg.ts";
 
-export type Fragments = {
-  /**
-   * The root fragment which is selected when no fragment
-   * indentifier is used to select from the fragments.
-   */
+export type FragmentType =
+  | 'root'
+  | 'id'
+  | 'bare'
+  | 'range'
+;
+
+export type Element = {
+  id?: string;
+  tag?: string;
+  class?: string;
+  attrs: Record<string, string | undefined>;
+  text?: string;
+  indent: number;
+  defined: boolean;
+  directives: Record<string, string>;
+};
+
+export type WorkingFragment = {
+  id?: string;
+  type?: FragmentType;
+  html: string;
+  deps: string[];
+  els: Element[];
+};
+
+export type Fragment = {
+  id: string;
+  type: FragmentType;
+  html: string;
+};
+
+export type Longform = {
   root: string | null;
-
-  /**
-   * Fragments which have html ids matching the longform
-   * fragment id.
-   */
-  ided: Record<string, string>;
-
-  /**
-   * Fragments which have no html id.
-   */
-  anon: Record<string, string>;
-
-  /**
-   * A set of fragments with a unique queryable class.
-   */
-  sets: Record<string, { class: string, elements: string[] }>;
+  fragments: Record<string, Fragment>;
 };
 
 export type SanitizeElementObj = {
@@ -41,39 +54,6 @@ export type SanitizeArgs = {
 };
 
 export type SanitizeFn = (html: string, args: SanitizeArgs) => string;
-
-export type Scope = SanitizeArgs & {
-  vars: Record<string, unknown>;
-  allowAll: boolean;
-  context: Record<string, unknown>;
-  elementAttrs: Record<string, Set<string>>;
-};
-
-export type Element = {
-  id?: string;
-  tag?: string;
-  class?: string;
-  attrs: Record<string, string | undefined>;
-  text?: string;
-  indent: number;
-  defined: boolean;
-  directives: Record<string, string>;
-  scope: Scope;
-};
-
-export type WorkingFragment = {
-  root: boolean;
-  id?: string;
-  bare: boolean;
-  indent: number;
-  start: number;
-  pos: number;
-  end: number;
-  html: string;
-  els: Element[];
-  deps: string[];
-  scope: Scope;
-};
 
 const voids = new Set([
   'area',
@@ -94,8 +74,6 @@ const voids = new Set([
 
 export type DirectiveDefinition = {
   declarationLevel?: 'root' | 'any';
-  clonesScope?: boolean;
-  mod?: (args: string, scope: Scope, element: Element) => Scope;
   output?: (args: string | null, element: Element) => string;
 }
 
@@ -109,134 +87,53 @@ const directives = {
       return `<!doctype ${args ?? 'html'}>`;
     },
   } satisfies DirectiveDefinition,
-  'set': {
-    declarationLevel: 'root',
-  } satisfies DirectiveDefinition,
-  'allow-all': {
-    clonesScope: true,
-    declarationLevel: 'any',
-    mod: (_args, scope) => {
-      scope.allowAll = true;
-      scope.elements = [];
-      scope.attributes = [];
-
-      return scope;
-    },
-  } satisfies DirectiveDefinition,
-  'allow-elements': {
-    clonesScope: true,
-    declarationLevel: 'any',
-    mod: (args, scope) => {
-      let match1: RegExpExecArray | null;
-      let match2: RegExpExecArray | null;
-      scope.allowAll = false;
-      scope.elements = [];
-
-      while ((match1 = allowedElementsRe.exec(args))) {
-        if (match1?.groups?.a == null) {
-          scope.elements.push(match1?.groups?.e as string);
-        } else {
-          const element: SanitizeElement = {
-            name: match1.groups.a as string,
-            attributes: [],
-          };
-          
-          while ((match2 = allowedAttributesRe.exec(match1.groups.a))) {
-            element.attributes.push(match2?.groups?.a as string);
-          }
-
-          scope.elements.push(element);
-        }
-      }
-
-      return scope;
-    }
-  } satisfies DirectiveDefinition,
-  'allow-attributes': {
-    clonesScope: true,
-    declarationLevel: 'any',
-    mod: (args, scope) => {
-      let match1: RegExpExecArray | null;
-
-      scope.allowAll = false;
-      scope.attributes = [];
-
-      while ((match1 = allowedAttributesRe.exec(args))) {
-        scope.attributes.push(match1?.groups?.a as string);
-      }
-
-      return scope;
-    } 
-  } satisfies DirectiveDefinition,
-  'var': {
-    declarationLevel: 'root',
-    mod(args, scope) {
-      let match: RegExpExecArray | null;
-
-      while ((match = varRe.exec(args))) {
-        scope.vars[match?.groups?.v as string] = scope.context[match?.groups?.v as string];
-      }
-
-      return scope;
-    },
-  } satisfies DirectiveDefinition,
 } as const;
 
 const supportedDirectives = new Set(Object.keys(directives));
 
-function newFragment(scope: Scope): WorkingFragment {
+function newFragment(): WorkingFragment {
   return {
-    els: [],
+    html: '',
     deps: [],
-    html: "",
-    root: false,
-    bare: true,
-    indent: 0,
-    start: 0,
-    pos: -1,
-    end: 0,
-    scope: structuredClone(scope),
+    els: [],
   };
 }
 
-function newElement(indent: number, scope: Scope): Element {
+function newElement(indent: number): Element {
   return {
     indent,
     defined: false,
     attrs: {},
     directives: {},
-    scope: structuredClone(scope),
   };
 }
 
 type Task =
-  | 'global'
-  | 'element'
-  | 'text'
+  | 'g' // defining global stuff
+  | 'e' // constructing element
+  | 't' // outputting html text
+  | 's' // skipping invalid content
   | null
 ;
 
-export function longform(
-  longform: string,
-  context: Record<string, unknown>,
-  sanitize: SanitizeFn,
-): Fragments {
-  const globalScope: Scope = {
-    allowAll: false,
-    elements: [],
-    attributes: [],
-    context,
-    vars: {},
-  };
+export type LongformArgs = {
+  sanatize?: SanitizeFn;
+};
+
+export function longform(longform: string, {
+  sanatize: _sanatize,
+}: LongformArgs = {}): Longform {
+  // flips to true if we find the root element.
+  // any other "roots" are ignored.
+  let foundRoot = false;
+  let foundIds: Record<string, string> = Object.create(null);
   let task: Task = null;
-  let curFragment: WorkingFragment = newFragment(globalScope);
-  let curElement: Element = newElement(0, globalScope);
-  let root: string | null = null;
-  const ided: Record<string, string> = {};
-  const anon: Record<string, string> = {};
-  const sets: Record<string, { class: string, elements: string[] }> = {};
-  const fragments: Array<WorkingFragment> = [];
-  const working: Record<string, WorkingFragment> = {};
+  let curFragment: WorkingFragment = newFragment();
+  let curElement: Element = newElement(0);
+  const output: Longform = {
+    root: null,
+    fragments: {},
+  };
 
   function close(targetIndent: number = 0) {
     while (
@@ -256,10 +153,6 @@ export function longform(
    * a new element.
    */
   function applyIndent(targetIndent: number) {
-    if (task === 'global' || curElement.indent === targetIndent) {
-      return;
-    }
-
     if (curElement.tag != null) {
       curFragment.html += `<${curElement.tag}`
 
@@ -290,18 +183,28 @@ export function longform(
       ) {
         curFragment.els.push(curElement);
       }
-
     }
-    
-    curElement = newElement(targetIndent, curElement.scope)
 
     if (targetIndent <= curElement.indent) {
+      curElement = newElement(targetIndent);
+
       close(targetIndent - 1);
 
       if (targetIndent === 0) {
-        fragments.push(curFragment);
-        curFragment = newFragment(globalScope);
+        if (curFragment.type === 'root') {
+          output.root = curFragment.html;
+        } else {
+          output.fragments[curFragment.id as string] = {
+            type: curFragment.type as FragmentType,
+            id: curFragment.id as string,
+            html: curFragment.html,
+          };
+        }
+
+        curFragment = newFragment();
       }
+    } else {
+      curElement = newElement(targetIndent)
     }
   }
   
@@ -309,64 +212,86 @@ export function longform(
     let paramsMatch: RegExpExecArray | null;
 
     switch (match[0]) {
-      case 'd': {
+      case 'd': { // directive
         if (!supportedDirectives.has(match[1])) {
           break;
         }
+
         const directive = directives[match[1] as keyof typeof directives];
 
-        if (directive.declarationLevel === 'root' && curFragment.indent !== 0) {
+        if (directive.declarationLevel === 'root' && curElement.indent !== 0) {
           break;
         }
 
         switch (match[1]) {
           case 'global': {
-            task = 'global';
+            task = 'g';
             break;
           }
           case 'doctype': {
-            task = 'element';
+            if (curElement.tag != null || task === 't') {
+              applyIndent(indent);
+            }
+
+            task = 'e';
             curFragment.html += `<!doctype ${match[2]}>`
             break;
-          }
-          case 'root': {
-            task = 'element';
-            task = 'element';
-            curFragment.root = true;
-            break;
-          }
-          case 'allow-all': {
-            globalScope.allowAll = true;
           }
         }
 
         break;
       }
-      case 'i': {
-        task = 'element';
+      case 'i': { // id
+        task = 'e';
+
         if (curElement.tag != null) {
           applyIndent(indent);
         }
 
         curElement.id = match[1];
+
+        if (indent === 0 && curFragment.id == null) {
+          curFragment.id = match[1];
+        }
+
+        break;
+      }
+      case 'r': {
+        task = 'e';
+
+        if (curElement.tag != null) {
+          applyIndent(indent);
+        }
+
+        curFragment.type = 'range';
+        curFragment.id = match[1];
+
         break;
       }
       case 'e': {
-        if (curElement.tag != null || task === 'text') {
-          task = 'element';
+        if (task === 's' && indent !== 0) {
+          break;
+        }
+
+        if (curElement.tag != null || task === 't') {
+          task = 'e';
           applyIndent(indent);
         } else {
-          task = 'element';
+          task = 'e';
         }
 
-        if (indent === 0 && curElement.id == null) {
-          curFragment.root = true;
+        if (indent === 0 && curFragment.id == null) {
+          if (foundRoot) {
+            task = 's';
+          } else {
+            curFragment.type = 'root';
+            foundRoot = true;
+          }
         } else if (indent === 0) {
           curFragment.id = curElement.id;
-          curFragment.bare = false;
+          curFragment.type = match[2] ? 'bare' : 'id';
         }
 
-        task = 'element';
         curElement.indent = indent;
         curElement.tag = match[1];
         curElement.defined = true;
@@ -402,31 +327,18 @@ export function longform(
           applyIndent(indent);
         }
 
-        if (task === 'element') {
-        curFragment.html += match[1].trim();
-        } else if (task === 'text') {
-          curFragment.html += ' ' + match[1].trim();
+        if (task === 't') {
+          curFragment.html += ' ';
         }
-        task = 'text';
+
+        curFragment.html += match[1].trim();
+
+        task = 't';
       }
     }
   });
 
   applyIndent(0)
 
-  let i = 0;
-  for (;i < fragments.length; i++) {
-    if (fragments[i].root) {
-      root = fragments[i].html;
-    } else if (!fragments[i].bare && fragments[i].id != null) {
-      ided[fragments[i].id] = fragments[i].html;
-    }
-  }
-
-  return {
-    root,
-    ided,
-    anon,
-    sets,
-  };
+  return output;
 }

@@ -1,6 +1,8 @@
 // w = leading whitespace
 // d = Directive indentifier, ia = Inline args
 // i = Element id, b = Bare indentifier
+// r = Range id
+// re = Range end
 // e = Element name, ea = Element args, it = Inline text
 // a = Attribute name, v# = Attribute value
 // l = Loop target, dv = Declared var
@@ -13,6 +15,12 @@ export const directiveReStr =
 export const idReStr =
   `(#(?<b>#)?(?<i>[\\w\\d\\-_:,.]+))` +
   `[ \\t]*`;
+
+export const rangeStartStr =
+  `^#(?<r>[a-z][\\w-_]*) +\\[`;
+
+export const rangeEndStr =
+  `^(?<re>\\])`;
 
 export const elementReStr = 
   `(?<e>[\\w\\d\\-]+)` +
@@ -47,7 +55,11 @@ export const varReStr =
 export const paramsReStr =
   `(#(?<i>[^.[]+))|(\\.(?<c>[^#\\.[]+))|((\\[(?<a>[^.=\\]]+))(=(?<v>[^\\]]+))?)`
 
-export const lfReg = new RegExp(`${wsp}((${directiveReStr})|(${idReStr})|(${elementReStr})|(${attributeReStr})|(${textReStr}))`, 'gi');
+export const lfReg = new RegExp(
+  `((${rangeStartStr}|${rangeEndStr})` +
+  `|(${wsp}(${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr})))`,
+  'gmi');
+
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gi');
 export const allowedAttributesRe = new RegExp(allowedAttributesReStr, 'gi');
 export const varRe = new RegExp(varReStr, 'gi');

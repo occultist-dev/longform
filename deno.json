@@ -7,6 +7,7 @@
     "@std/assert": "jsr:@std/assert@1",
     "@types/node": "npm:@types/node@^24.8.1",
     "dompurify": "npm:dompurify@^3.3.0",
-    "jsdom": "npm:jsdom@^27.0.1"
+    "jsdom": "npm:jsdom@^27.0.1",
+    "marked": "npm:marked@^16.4.1"
   }
 }
