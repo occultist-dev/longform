@@ -1,0 +1,309 @@
+
+@doctype:: html
+html::
+  head::
+    #[head]
+  body::
+    #[header]
+
+    ol#toc::
+      li::
+        a[href=#language-intro]:: Language Intro
+    #[language-intro]
+
+
+#head [
+  title:: Longform Working Specification
+  meta::
+    [name=content]
+    [description=Working specification for the markup and templating language Longform]
+]
+
+
+#header
+header::
+  hgroup::
+    h1:: Longform Working Specification
+    p::
+      A markup and templating language.
+
+
+#language-intro
+section::
+  h2:: Language Intro
+  p::
+    <strong>Longform</strong> is an easy to read markup and templating language that outputs to
+    <b class=keyword>HTML</b>, <b class=keyword>MathML</b> and <b class=keyword>
+    XML</b>. A longform document can be flattened into longform fragments
+    identifiable by their ids. Fragments can then be embedded within each other
+    as the document is parsed, and they can be exported, to be used by external
+    software when rendering a webpage or to the DOM.
+  p::
+    Longform offers flexibility when embedding user input. Most templating languges
+    have either an escape option, or the option to embed content which is trusted
+    but potentially vulnerable to <b class=keyword>XSS</b>. Longform has directives
+    <code class=keyword>@allow-elements</code> and <b class=keyword>@allow-attributes</b>
+    which can be used to configure what content is allowed when embedding any input
+    content.
+  p::
+    Longform will honor these directives when rendering it's own markup.
+    When rendering embedded HTML, it allows a sanatizer function to be passed in
+    which might be an instance of <a href="https://github.com/cure53/DOMPurify>
+    DOMPurify</a>, or in the future an instance of the
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer">
+    HTML Sanitizer</a>.
+
+
+#syntax
+section::
+  h2:: Fragments
+
+  h3:: The root fragment
+  p::
+    The root fragment is an optional fragment that has no id. There can be only one root
+    fragment in a Longform document. After a root fragment is found, all other fragments
+    which do not have ids assigned are ignored when rendering the output markup
+    The root fragment often would have the <code>@doctype</code> or <code>@xml</code>
+    directive declared before it to add a <b class=keyword>HTML</b> doctype or
+    <b class=keyword>XML</b> declaration written before it into the ouput markup.
+
+  pre::
+    code:: {
+      @doctype:: html
+      html::
+        head::
+          title:: Example Root Fragment
+        body::
+          h1:: Example Root Fragment
+    }
+
+  h3:: Fragments with embedded ids
+  p::
+    Fragments can have there ids embedded into the output markup. Embedded ids should be
+    unique to the target document or website where they will be rendered as well as in
+    the Longform document. If a longform fragment references a fragment with an embedded
+    id, any other attempts to reference the embedded fragment will be ignored by the
+    Longform parser. Fragments with embeded ids will also not be exported to be used
+    by external software if they have been referenced in the Longform document.
+
+  pre::
+    code:: {
+      #embedded-id
+      section::
+        h2:: A fragment which can be referenced by its <a href="#embedded-id>id</a>
+    }
+
+  pre::
+    samp::
+      code:: {
+        <section id="embedded-id">
+          <h2>...</h2>
+        </section>
+      }
+
+  
+  h3:: Bare fragments
+  p::
+    Bare fragments have ids that can be referenced many times within the same Longform
+    document and are always outputted to be used by external software. The given id is
+    written to the output markup as a data attribute instead of an id.
+
+  pre::
+    code:: {
+      ##bare-fragment
+      p::
+        This is a fragment which can be re-used many times within and outside of the
+        Longform document. It might be useful for button text and other common
+        terms used in a webapp.
+    }
+
+  pre::
+    samp::
+      code:: {
+        <p data-lf="bare-fragment">...</p>
+      }
+
+
+  h3:: Range fragments
+  p::
+    Range fragments can have more than one topmost elements which are outputted alongside
+    each other. Their ids are not written into the output markup but data attributes are
+    so external software can select the element range in a DOM environment.
+
+  pre::
+    code:: {
+      #range-fragment [
+        title:: The range fragment
+        meta::
+          [name=description]
+          [content=Demonstraiting the range fragment]
+      ]
+    }
+
+  pre::
+    samp::
+      code:: {
+        <title data-lf="range-fragment">...</title>
+        <meta data-lf="range-fragment" ...>
+      }
+
+#elements
+section::
+  h2:: Declaring elements
+
+  h3:: Element tags
+  p::
+    A sole element tag can be outputted using the element name followed
+    by two semicolons <code>::</code>.
+
+    pre::
+      code:: {
+        div::
+      }
+
+  h3:: Element attributes
+  p::
+    Element attributes are declared after the tag and are wrapped in 
+    square brackets <code>[]</code>.
+
+  pre::
+    code:: {
+      div[data-foo=bar][aria-describedby=#baz]::
+    }
+
+  p::
+    Alternatively attributes can follow directly after the element tag
+    with 1 level of indentation.
+  pre::
+    code:: {
+      div::
+        [data-foo=bar]
+        [aria-describedby=#baz]
+    }
+
+  p::
+    If an element is declared multiple times the content is concatinated
+    into a single value. This behaviour does not apply to the element's id
+    if it is defined using the attribute syntax. And classes will be
+    concatinated with a space separating them.
+  pre::
+    code:: {
+      meta::
+        [name=description]
+        [content=Lorem ipsum dolor sit amet, consectetur adipiscing elit.]
+        [content=Quisque a sem et nisl mollis porttitor et sit amet neque.]
+        [content=Maecenas suscipit nulla ac suscipit imperdiet. Quisque]
+        [content=odio nisi, semper non dui quis, feugiat faucibus ipsum.]
+    }
+
+    
+  h3:: Element output ids
+  p::
+    The elements output markup id can be declared on the line before the
+    tag at the same indentation level with the hash <code>#</code> symbol
+    pre-fixing the id.
+  pre::
+    code:: {
+      #element-id
+      div::
+    }
+
+  p::
+    Alternatively the id can follow the tag name, before the closing semicolons.
+    Again with a hash prefixing it. If the id had
+  pre::
+    code:: {
+      div#element-id::
+    }
+
+  p::
+    And finally the id can be declared using the attribute syntax.
+  pre::
+    code:: {
+      div[id=element-id]::
+      <!-- or -->
+      div::
+        [id=element-id]
+    }
+
+  p::
+    If an element has an id declared for it twice only the first declaration is used.
+  
+
+  h3:: Element classes
+  p::
+    Classes can be defined following the element's tag declaration with a
+    period <code>.</code> prefixing each tag.
+  pre::
+    code:: {
+      div#element-id.class-1.class-2.class-3::
+    }
+
+  p::
+    Alternatively classes can be defined using the attribute syntax
+    on the lines following the tag definition.
+  pre::
+    code:: {
+      div#element-id::
+        [class=class-1]
+        [class=class-2 class-3]
+    }
+
+  h3:: Element text and native markup content.
+  p::
+    Elements can have text and native markup following the tag declaration
+    with a space between the text and the double colons of the element definition.
+  pre::
+    code:: {
+      div:: Text content with <em>some</em> native markup.
+    }
+
+  p::
+    Alternatively, the text and native markup can follow the tag declaration
+    with one extra indentation level.
+  pre::
+    code:: {
+      div::
+        Text content with <em>some</em> native markup.
+    }
+
+  p::
+    <i>In conclusion</i> the Longform syntax is versatile, allowing elements to be declared
+    without two much verbosity, unless it is required. Where Longform is best is
+    in layout and heirachical markup. Blocks of text with inline HTML formatting
+    often will look nicer when written in HTML.
+
+  h3:: Preformatted text
+
+  pre::
+    code:: [
+      div::
+        #element-id
+        button::
+          [class=class1 class2]
+          [class=class3]
+          [type=button]
+
+          <strong>Text content</strong>
+
+        button#element-id.class1.class2.class3[type=button]:: <strong>Text content</strong>
+    ]
+
+
+  h3:: Whitespace
+  p::
+    Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two
+    spaces out from an element will be outputted as the child of that element.
+
+  p::
+    Some exceptions for this are when native markup of the output language and text
+    are being processed. Or when in a preformatted block.
+
+  h4:: Comments
+  p::
+    Comments can be written outside of a fragment using <code>--</code> two hyphens.
+    Within a fragment comments in the output markup language's syntax can be used
+    but they will be written to the output alongside all other text in the native
+    output markup.
+    
+
