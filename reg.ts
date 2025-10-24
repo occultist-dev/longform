@@ -3,14 +3,15 @@
 // i = Element id, b = Bare indentifier
 // r = Range id
 // re = Range end
-// e = Element name, ea = Element args, it = Inline text
+// e = Element name, ea = Element args, it = Inline text, pr = Preformatted
 // a = Attribute name, v# = Attribute value
 // l = Loop target, dv = Declared var
 // t = Text
-const wsp = `(?<w>[ \\t]+)?`;
+
+export const wspReStr = `(?<w>[ \\t]+)?`;
 
 export const directiveReStr =
-  `\\@(?<d>\\w[\\w\\d\\-_]+)((::)? ?(?<ia>.+)?)`;
+  `\\@(?<d>\\w[\\w\\d\\-_]+)(:: (?<ia>[^\\n]+)?)?`;
 
 export const idReStr =
   `(#(?<b>#)?(?<i>[\\w\\d\\-_:,.]+))` +
@@ -23,16 +24,16 @@ export const rangeEndStr =
   `^(?<re>\\])`;
 
 export const elementReStr = 
-  `(?<e>[\\w\\d\\-]+)` +
+  `(?<e>[\\w\\-]+(:[\\w\\-]+)?)` +
   `(?<ea>[#.\\[].*)?::` +
-  `( (?<it>.+)| *)`;
+  `( (?<pr>\\{[ \\t]*)| (?<it>[^\\n]+))?`;
 
 export const attributeReStr = 
-  `\\[(?<a>[\\w\\d\\-]+)` +
+  `\\[(?<a>[\\w\\-]+(:[\\w\\-]+)?)` +
   `(=(` +
-  `('(?<v1>["\\w\\d\\- ]+)')` +
-  `|("(?<v2>['\\w\\d\\- ]+)")` +
-  `|(?<v3>[\\w\\d\\- ]+)` +
+  `('(?<v1>[^']+)')` +
+  `|("(?<v2>[^"]+)")` +
+  `|(?<v3>[^\\]]+)` +
   `))?\\]`;
 
 export const forOfReStr =
@@ -41,7 +42,7 @@ export const forOfReStr =
   `::\\[ \\t]*`;
 
 export const textReStr =
-  `(?<t>.+)`;
+  `(?<t>[^ \\n\\t]+)`;
 
 export const allowedElementsReStr =
   `(?<e>\\w[\\w\\d\\-_]*)(\\[(?<a>\\w[\\w\\d\\-_ ]*)\\])?`
@@ -57,7 +58,7 @@ export const paramsReStr =
 
 export const lfReg = new RegExp(
   `((${rangeStartStr}|${rangeEndStr})` +
-  `|(${wsp}(${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr})))`,
+  `|(${wspReStr}(${directiveReStr}|${idReStr}|${elementReStr}|${attributeReStr}|${textReStr})))`,
   'gmi');
 
 export const allowedElementsRe = new RegExp(allowedElementsReStr, 'gi');

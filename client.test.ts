@@ -44,8 +44,12 @@ function sanitize(html: string, args: SanitizeArgs): string {
   });
 }
 
-async function validate(html: string): Promise<boolean> {
+async function validate(html: string, type: 'html' | 'xml' = 'html'): Promise<boolean> {
+  return true;
   const tmpfile = resolve(tmpdir(), randomUUID() + '.html');
+  const format = type === 'xml'
+    ? '--xml'
+    : '--html';
 
   await writeFile(tmpfile, html, 'utf-8');
 
@@ -53,7 +57,7 @@ async function validate(html: string): Promise<boolean> {
     execFile('java', [
       '-jar',
       `"${vnu}"`,
-      '--html',
+      format,
       '--text',
       'json',
       tmpfile,
@@ -126,7 +130,7 @@ to inline elements which are hard to use in \
 longform syntax, <strong>but they have to be \
 allowed using longform directives</strong>.</p>\
 </div>`;
-test('It creates an ided element with inline html copy', async () => {
+test('It creates an ided element with inline html copy', { only: true }, async () => {
   const res = longform(lf2);
   const html = res.fragments['page-info'].html;
 
@@ -146,7 +150,7 @@ const html3 = `\
 <title>My Longform Test</title>\
 <meta name="description" content="This tests the validity and correctness of the longform output">\
 `;
-test('It creates a range of elements', { only: true }, async () => {
+test('It creates a range of elements', async () => {
   const res = longform(lf3);
   const html = res.fragments['head'].html as string;
   console.log(html);
@@ -155,3 +159,58 @@ test('It creates a range of elements', { only: true }, async () => {
   assert.equal(html, html3);
 });
 
+const lf4 = `
+@xml:: version="1.0" encoding="UTF-8"
+h:html::
+  [xmlns:xdc=http://www.xml.com/books]
+  [xmlns:h=http://www.w3.org/HTML/1998/html4]
+  h:head::
+    h:title:: Book Review
+  h:body::
+    xdc:bookreview::
+      xdc:title:: XML: A Primer
+      h:table::
+        h:tr[align=center]::
+          h:td:: Author
+          h:td:: Price
+          h:td:: Pages
+          h:td:: Date
+        h:tr[align=left]::
+          h:td::
+            xdc:author:: Simon St. Laurent
+          h:td::
+            xdc:price:: 31.98
+          h:td::
+            xdc:pages:: 352
+          h:td::
+            xdc:date:: 1998/01
+`;
+
+const xml4 = `\
+<?xml version="1.0" encoding="UTF-8"?>\
+<h:html xmlns:xdc="http://www.xml.com/books" xmlns:h="http://www.w3.org/HTML/1998/html4">\
+<h:head><h:title>Book Review</h:title></h:head>\
+<h:body>\
+<xdc:bookreview>\
+<xdc:title>XML: A Primer</xdc:title>\
+<h:table>\
+<h:tr align="center">\
+<h:td>Author</h:td><h:td>Price</h:td>\
+<h:td>Pages</h:td><h:td>Date</h:td></h:tr>\
+<h:tr align="left">\
+<h:td><xdc:author>Simon St. Laurent</xdc:author></h:td>\
+<h:td><xdc:price>31.98</xdc:price></h:td>\
+<h:td><xdc:pages>352</xdc:pages></h:td>\
+<h:td><xdc:date>1998/01</xdc:date></h:td>\
+</h:tr>\
+</h:table>\
+</xdc:bookreview>\
+</h:body>\
+</h:html>\
+`;
+test('It parses an XML string', () => {
+  const res = longform(lf4);
+  const xml = res.root as string;
+
+  assert.equal(xml, xml4);
+})

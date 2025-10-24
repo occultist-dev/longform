@@ -87,6 +87,12 @@ const directives = {
       return `<!doctype ${args ?? 'html'}>`;
     },
   } satisfies DirectiveDefinition,
+  'xml': {
+    declarationLevel: 'root',
+    output: (args) => {
+      return `<?xml ${args}?>`;
+    },
+  } satisfies DirectiveDefinition,
 } as const;
 
 const supportedDirectives = new Set(Object.keys(directives));
@@ -217,7 +223,7 @@ export function longform(longform: string, {
           break;
         }
 
-        const directive = directives[match[1] as keyof typeof directives];
+        const directive: DirectiveDefinition = directives[match[1] as keyof typeof directives];
 
         if (directive.declarationLevel === 'root' && curElement.indent !== 0) {
           break;
@@ -237,6 +243,16 @@ export function longform(longform: string, {
             curFragment.html += `<!doctype ${match[2]}>`
             break;
           }
+          case 'xml': {
+            if (curElement.tag != null || task === 't') {
+              applyIndent(indent);
+            }
+
+            task = 'e';
+            curFragment.html += `<?xml ${match[2] ?? 'version="1.0" encoding="UTF-8"'}?>`
+            break;
+          }
+
         }
 
         break;
@@ -307,7 +323,19 @@ export function longform(longform: string, {
                 curElement.class += ' ' + paramsMatch.groups.c;
               }
             } else if (paramsMatch.groups?.a != null) {
-              curElement.attrs[paramsMatch.groups.a] = paramsMatch.groups?.v;
+              if (paramsMatch.groups.a === 'id') {
+                if (curElement.id == null) {
+                  curElement.id = paramsMatch.groups.v;
+                }
+              } else if (paramsMatch.groups.a === 'class') {
+                if (curElement.class == null) {
+                  curElement.class = paramsMatch.groups.v;
+                } else {
+                  curElement.class += ' ' + paramsMatch.groups.v;
+                }
+              } else {
+                curElement.attrs[paramsMatch.groups.a] = paramsMatch.groups?.v;
+              }
             }
           }
         }
@@ -319,7 +347,16 @@ export function longform(longform: string, {
         break;
       }
       case 'a': {
-        curElement.attrs[match[1]] = match[2];
+        if (curElement.tag == null) {
+          break;
+        }
+
+        if (curElement.attrs[match[1]] != null && match[2] != null) {
+          curElement.attrs[match[1]] += match[2] as string;
+        } else {
+          curElement.attrs[match[1]] = match[2] ?? undefined;
+        }
+
         break;
       }
       case 't': {
@@ -332,7 +369,6 @@ export function longform(longform: string, {
         }
 
         curFragment.html += match[1].trim();
-
         task = 't';
       }
     }

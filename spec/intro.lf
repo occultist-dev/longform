@@ -48,7 +48,7 @@ section::
   p::
     Longform will honor these directives when rendering it's own markup.
     When rendering embedded HTML, it allows a sanatizer function to be passed in
-    which might be an instance of <a href="https://github.com/cure53/DOMPurify>
+    which might be an instance of <a href="https://github.com/cure53/DOMPurify">
     DOMPurify</a>, or in the future an instance of the
     <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer">
     HTML Sanitizer</a>.
@@ -107,7 +107,6 @@ section::
     Bare fragments have ids that can be referenced many times within the same Longform
     document and are always outputted to be used by external software. The given id is
     written to the output markup as a data attribute instead of an id.
-
   pre::
     code:: {
       ##bare-fragment
@@ -116,7 +115,6 @@ section::
         Longform document. It might be useful for button text and other common
         terms used in a webapp.
     }
-
   pre::
     samp::
       code:: {

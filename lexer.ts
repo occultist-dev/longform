@@ -5,6 +5,7 @@ export type IDMatch = ['i', id: string, bear: boolean];
 export type RangeStartMatch = ['r', id: string];
 export type RangeEndMatch = ['re'];
 export type ElementMatch = ['e', element: string, args: string | null, text: string | null];
+export type PreformatMatch = ['p', element: string, args: string];
 export type AttrMatch = ['a', attr: string, value: string | null]; 
 export type LoopMatch = ['l', list: string, def: string];
 export type TextMatch = ['t', text: string];
@@ -14,6 +15,7 @@ export type LexMatch =
   | RangeStartMatch
   | RangeEndMatch
   | ElementMatch
+  | PreformatMatch
   | AttrMatch
   | LoopMatch
   | TextMatch
@@ -26,7 +28,6 @@ const match: LexMatch = new Array(4) as DirectiveMatch;
 
 export function lexer(longform: string, handler: LexHandler) {
   let res: RegExpExecArray | null;
-  let index = 0;
 
   while ((res = lfReg.exec(longform))) {
     if (res?.groups == null) {
@@ -49,10 +50,16 @@ export function lexer(longform: string, handler: LexHandler) {
     } else if (res.groups.re != null) {
       match[0] = 're';
     } else if (res.groups.e != null) {
-      match[0] = 'e';
-      match[1] = res.groups.e;
-      match[2] = res.groups.ea;
-      match[3] = res.groups.it ?? null;
+      if (res.groups.pr == null) {
+        match[0] = 'e';
+        match[1] = res.groups.e;
+        match[2] = res.groups.ea;
+        match[3] = res.groups.it ?? null;
+      } else {
+        match[0] = 'p';
+        match[1] = res.groups.e;
+        match[2] = res.groups.ea;
+      }
     } else if (res.groups.a != null) {
       match[0] = 'a';
       match[1] = res.groups.a;
@@ -64,11 +71,6 @@ export function lexer(longform: string, handler: LexHandler) {
     } else {
       match[0] = 't';
       match[1] = res.groups.t;
-    }
-
-    index++;
-    if (index === 20) {
-      throw new Error('Too much')
     }
 
     handler(indent, match);

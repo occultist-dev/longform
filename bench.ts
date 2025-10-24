@@ -15,6 +15,10 @@ div::
   div.card::
     h3:: Child card
     p:: This is my card
+  pre::
+    code:: {
+      div:: Sample div
+    }
 `;
 
 const md = `
@@ -32,6 +36,9 @@ I have a paragraph following my header.
 
   This is my card.
 </div>
+<pre><code>
+  div:: sample div
+</code></pre>
 `;
 
 console.log('LONGFORM OUTPUT');
@@ -40,14 +47,14 @@ console.log(longform(lf, {}, (html) => html).root);
 console.log('MARKED OUTPUT');
 console.log(marked.parse(md));
 
-Deno.bench('Lexer', () => {
+Deno.bench('Lexer', { n: 10_000 },  () => {
   lexer(lf, () => {});
 });
 
-Deno.bench('Longform', () => {
+Deno.bench('Longform', { n: 10_000 }, () => {
   longform(lf, {}, (html) => html);
 });
 
-Deno.bench('Marked', () => {
+Deno.bench('Marked', { n: 10_000 }, () => {
   marked.parse(md);
 });
