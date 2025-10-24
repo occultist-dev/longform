@@ -8,7 +8,7 @@
 // l = Loop target, dv = Declared var
 // t = Text
 
-export const wspReStr = `(?<w>[ \\t]+)?`;
+export const wspReStr = `(?<w>[  ]+)?`;
 
 export const directiveReStr =
   `\\@(?<d>\\w[\\w\\d\\-_]+)(:: (?<ia>[^\\n]+)?)?`;

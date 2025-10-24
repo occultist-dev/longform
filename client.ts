@@ -132,7 +132,7 @@ export function longform(longform: string, {
   // flips to true if we find the root element.
   // any other "roots" are ignored.
   let foundRoot = false;
-  let foundIds: Record<string, string> = Object.create(null);
+  let preformattedIndent: number | null = null;
   let task: Task = null;
   let curFragment: WorkingFragment = newFragment();
   let curElement: Element = newElement(0);
@@ -284,7 +284,9 @@ export function longform(longform: string, {
 
         break;
       }
-      case 'e': {
+      // deno-lint-ignore no-fallthrough
+      case 'p': preformattedIndent = indent;
+      case 'e': { // id
         if (task === 's' && indent !== 0) {
           break;
         }
@@ -363,7 +365,18 @@ export function longform(longform: string, {
         if (curElement.tag != null) {
           applyIndent(indent);
         }
-
+        
+        if (preformattedIndent != null && preformattedIndent <= indent) {
+          if (/[ \\t]*}[ \\t]*/.test(match[1])) {
+            break;
+          }
+        } else if (preformattedIndent != null) {
+          console.log('INDENT', indent)
+          console.log('PREFORMATTED', preformattedIndent)
+          curFragment.html += '\n ' + ' '.repeat((indent - preformattedIndent) * 2)
+          break;
+        }
+        
         if (task === 't') {
           curFragment.html += ' ';
         }

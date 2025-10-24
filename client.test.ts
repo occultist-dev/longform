@@ -214,3 +214,18 @@ test('It parses an XML string', () => {
 
   assert.equal(xml, xml4);
 })
+
+const lf5 = `
+pre::
+  code:: {
+    div::
+      Example longform
+      <em>with preformatted html</em>
+  }
+`;
+test('It parses preformatted content', { only: true }, async () => {
+  const res = longform(lf5);
+  const html = res.root as string;
+
+  console.log(await prettier.format(html, { parser: 'html' }));
+})

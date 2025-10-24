@@ -1,6 +1,7 @@
 import { longform } from "./client.ts";
 import { marked } from 'marked';
 import { lexer } from "./lexer.ts";
+import { lexer2 } from "./lexer2.ts";
 
 
 const lf = `
@@ -49,6 +50,9 @@ console.log(marked.parse(md));
 
 Deno.bench('Lexer', { n: 10_000 },  () => {
   lexer(lf, () => {});
+});
+Deno.bench('Lexer2', { n: 10_000 },  () => {
+  lexer2(lf);
 });
 
 Deno.bench('Longform', { n: 10_000 }, () => {

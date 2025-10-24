@@ -1,34 +1,7 @@
-import { longform } from "./lf.ts";
+import { lexer2 } from "./lexer2.ts";
 
 
-const lf = `\
-@set::
-  title:: My title
-
-root::
-  main.logged-in::
-    header::
-      h1::
-        Longform Test
-  body::
-    p::
-      Here we are testing some long form.
-
-#my-id
-div::
-  button::
-    [disabled]
-
-    My <span>Button</span>
-
-##activate-txt
-span::
-  Activate
-`;
 
 Deno.test('it produces fragments', () => {
-  const fragments = longform(lf);
-
-  console.log(fragments);
-  console.log();
+  console.log(lexer2())
 })
