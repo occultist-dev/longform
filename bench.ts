@@ -48,13 +48,18 @@ console.log(longform(lf, {}, (html) => html).root);
 console.log('MARKED OUTPUT');
 console.log(marked.parse(md));
 
-Deno.bench('Lexer', { n: 10_000 },  () => {
-  lexer(lf, () => {});
-});
+const json = JSON.stringify(lexer2(lf))
 Deno.bench('Lexer2', { n: 10_000 },  () => {
   lexer2(lf);
 });
 
+Deno.bench('JSON', { n: 10_000 }, () => {
+  JSON.parse(json);
+})
+
+Deno.bench('Lexer', { n: 10_000 },  () => {
+  lexer(lf, () => {});
+});
 Deno.bench('Longform', { n: 10_000 }, () => {
   longform(lf, {}, (html) => html);
 });

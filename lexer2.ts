@@ -1,9 +1,10 @@
 import { paramsRe } from "./reg.ts";
 import { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
-const lines1 = /(?:--)|(^.*(@|::|#).*$)|(^.+$)/gmi
-  , element1 = /([  ]+)? ?(?=@)(\w[\w\-]*(?::[\w\-]+)?)(.*)?::(?: ({|[^\n]+))?/gmi
+const lines1 = /^(?:[ \t]*(--).*)|(.*(@|#).*)|(?:.*(::).*)|(?:.+)$/gmi
+  , element1 = /([  ]+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[]*)?::(?: ({|[^\n]+))?/gmi
   , directive1 = /([  ]+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
+  , preformattedClose = /[ \t]*}[ \t]*/
   , id1 = /#[\w\-]+/gmi
   , idnt1 = /^([  ]+)/
   , voids = new Set([
@@ -28,10 +29,15 @@ let m1: RegExpExecArray | null
 
 
 const lf1 = `\
+-- comment
 @doctype:: test
-pre:: {
-  formatted
-}
+html::
+  pre:: {
+    formatted
+  }
+  #test
+  html:div::
+    Test div
 `;
 
 function makeElement(indent: number = 0): WorkingElement {
@@ -59,7 +65,7 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
   };
 }
 
-export function lexer2(lf: string = lf1) {
+export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}) {
   let foundRoot: boolean = false
     , skipping: boolean = false
       // used for scripts and preformat
@@ -150,35 +156,49 @@ export function lexer2(lf: string = lf1) {
   }
 
   while ((m1 = lines1.exec(lf))) {
+    if (m1[1] === '--') {
+      continue;
+    }
+
+    debug();
+    debug('LINE', m1[0])
+    debug('IS COMMMENT', m1[1]);
+    debug('DIR/ID', m1[2]);
+    debug('EL', m1[3]);
+    debug(m1);
+    
+    // If this is a script tag or preformatted block
+    // we want to retain the intended formatting less
+    // the indent. Preformatting can apply to any element
+    // by ending the declaration with `:: {`.
     if (specialIndent != null) {
       // inside a script or preformatted block
       m2 = idnt1.exec(m1[0]);
 
       if (m2 == null || m2[0].length / 2 <= specialIndent) {
-        specialIndent = 0;
+        specialIndent = null;
 
-        if (/[ \t]*}[ \t]*/.test(m1[0])) {
+        if (preformattedClose.test(m1[0])) {
           continue;
         }
       } else {
         const line = m1[0].replace('  '.repeat(specialIndent), '');
 
-        element.html += line;
+        fragment.html += line;
 
         continue;
       }
     }
 
-    switch (m1[2]) {
+    switch (m1[3] ?? m1[4]) {
       case '#': {
         m2 = id1.exec(m1[0]);
         break;
       }
-
       case '@':
       // deno-lint-ignore no-fallthrough
       case '::': {
-        m2 = m1[2] === '@' ? null : element1.exec(m1[0]);
+        m2 = m1[3] === '@' ? null : element1.exec(m1[0]);
 
         // console.log(m1[0])
         // console.log(m2)
@@ -191,7 +211,6 @@ export function lexer2(lf: string = lf1) {
               , ar = m2[3]
               , pr = m2[4] != null;
 
-          if (pr) specialIndent = indent;
 
           if (element.tag != null) {
             applyIndent(indent);
@@ -241,6 +260,10 @@ export function lexer2(lf: string = lf1) {
             }
           }
 
+          if (pr) {
+            specialIndent = indent;
+            applyIndent(indent + 1);
+          }
           break;
         }
 
