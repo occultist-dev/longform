@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
 import { rangeStartStr } from "./reg.ts";
+import { lexer2 } from "./lexer2.ts";
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -101,12 +102,11 @@ const html1 = `\
 <body><h1>Longform h1</h1></body></html>`;
 
 test('It creates a root element with doctype', async () => {
-  const res = longform(lf1);
+  const res = lexer2(lf1, console.log);
   const html = res.root as string;
 
   assert(await validate(html));
-  assert(html != null);
-  assert(html == html1)
+  assert.equal(html, html1);
 });
 
 const lf2 = `\
@@ -130,8 +130,9 @@ to inline elements which are hard to use in \
 longform syntax, <strong>but they have to be \
 allowed using longform directives</strong>.</p>\
 </div>`;
-test('It creates an ided element with inline html copy', { only: true }, async () => {
-  const res = longform(lf2);
+test('It creates an ided element with inline html copy', async () => {
+  const res = lexer2(lf2, console.log);
+  console.log(res);
   const html = res.fragments['page-info'].html;
 
   assert(await validate(wrapBody(html)));
@@ -150,8 +151,9 @@ const html3 = `\
 <title>My Longform Test</title>\
 <meta name="description" content="This tests the validity and correctness of the longform output">\
 `;
-test('It creates a range of elements', async () => {
-  const res = longform(lf3);
+test('It creates a range of elements', { only: true }, async () => {
+  const res = lexer2(lf3, console.log);
+  console.log(res);
   const html = res.fragments['head'].html as string;
   console.log(html);
 
@@ -169,9 +171,9 @@ h:html::
   h:body::
     xdc:bookreview::
       xdc:title:: XML: A Primer
-      h:table::
-        h:tr[align=center]::
-          h:td:: Author
+      h:table:
+        h:tr[agn=center]::
+          h:td Author
           h:td:: Price
           h:td:: Pages
           h:td:: Date
@@ -209,7 +211,7 @@ const xml4 = `\
 </h:html>\
 `;
 test('It parses an XML string', () => {
-  const res = longform(lf4);
+  const res = lexer2(lf4);
   const xml = res.root as string;
 
   assert.equal(xml, xml4);
@@ -223,9 +225,37 @@ pre::
       <em>with preformatted html</em>
   }
 `;
-test('It parses preformatted content', { only: true }, async () => {
-  const res = longform(lf5);
+const html5 = `\
+<pre><code>
+div::
+  Example longform
+  <em>with preformatted html</em>
+</code></pre>\
+`;
+test('It parses preformatted content', () => {
+  const res = lexer2(lf5, console.log);
   const html = res.root as string;
 
-  console.log(await prettier.format(html, { parser: 'html' }));
+  assert.equal(html, html5);
+})
+
+const lf6 = `
+head::
+  script:: {
+    const foo = 'bar';
+
+    console.log(foo);
+  }
+`;
+const html6 = `\
+<head><script>
+const foo = 'bar';
+console.log(foo);
+</script></head>\
+`;
+test('It parses preformatted content', () => {
+  const res = lexer2(lf6, console.log);
+  const html = res.root as string;
+
+  assert.equal(html, html6);
 })

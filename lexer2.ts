@@ -1,12 +1,14 @@
 import { paramsRe } from "./reg.ts";
-import { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
+import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
-const lines1 = /^(?:[ \t]*(--).*)|(.*(@|#).*)|(?:.*(::).*)|(?:.+)$/gmi
-  , element1 = /([  ]+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[]*)?::(?: ({|[^\n]+))?/gmi
-  , directive1 = /([  ]+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
+const lines1 = /^(?:[ ]*(--).*)|(.*(@|#).*)|(?:.*(::).*)|(?:\ \ .*(\[).*)|(?:.+)$/gmi
+  , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::( ({|[^\n]+))?/gmi
+  , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
+  , attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/
   , preformattedClose = /[ \t]*}[ \t]*/
-  , id1 = /#[\w\-]+/gmi
-  , idnt1 = /^([  ]+)/
+  , id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi
+  , idnt1 = /^(\ \ )+/
+  , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
   , voids = new Set([
     'area',
     'base',
@@ -35,9 +37,8 @@ html::
   pre:: {
     formatted
   }
-  #test
-  html:div::
-    Test div
+  header::
+    h1:: Can it do this?
 `;
 
 function makeElement(indent: number = 0): WorkingElement {
@@ -72,28 +73,11 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
     , specialIndent: number | null = null
     , element: WorkingElement = makeElement()
     , chunk: WorkingChunk | null = makeChunk()
-    , fragment: WorkingFragment = makeFragment()
-    , output: Longform = Object.create(null)
-  ;
+    , fragment: WorkingFragment = makeFragment();
+  const output: Longform = Object.create(null);
 
   output.fragments = Object.create(null);
   
-  /**
-   * Closes all working elements at or deeper
-   * than the target indent.
-   */
-  function close(targetIndent: number = 0) {
-    while (
-      fragment.els.length !== 0 && (
-        targetIndent == null ||
-        fragment.els[fragment.els.length - 1].indent !== targetIndent
-      )
-    ) {
-      const element = fragment.els.pop();
-
-      fragment.html += `</${element?.tag}>`;
-    }
-  }
   
   /**
    * Closes any current in progress element definition
@@ -135,9 +119,19 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
     if (targetIndent <= element.indent) {
       element = makeElement(targetIndent);
 
-      close(targetIndent - 1);
+      while (
+        fragment.els.length !== 0 && (
+          targetIndent == null ||
+          fragment.els[fragment.els.length - 1].indent !== targetIndent - 1
+        )
+      ) {
+        const element = fragment.els.pop();
+
+        fragment.html += `</${element?.tag}>`;
+      }
 
       if (targetIndent === 0) {
+        debug('close frag', fragment.type, fragment.id);
         if (fragment.type === 'root') {
           output.root = fragment.html;
         } else {
@@ -160,59 +154,94 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
       continue;
     }
 
-    debug();
-    debug('LINE', m1[0])
-    debug('IS COMMMENT', m1[1]);
-    debug('DIR/ID', m1[2]);
-    debug('EL', m1[3]);
-    debug(m1);
-    
     // If this is a script tag or preformatted block
     // we want to retain the intended formatting less
     // the indent. Preformatting can apply to any element
     // by ending the declaration with `:: {`.
     if (specialIndent != null) {
       // inside a script or preformatted block
+      idnt1.lastIndex = 0;
       m2 = idnt1.exec(m1[0]);
+      const indent = m2 == null
+        ? null
+        : m2[0].length / 2;
 
-      if (m2 == null || m2[0].length / 2 <= specialIndent) {
+      if (m2 == null || indent as number <= specialIndent) {
+        fragment.html += '\n';
+        debug(indent, '}', m2?.[0]);
+
+        applyIndent(specialIndent);
         specialIndent = null;
 
         if (preformattedClose.test(m1[0])) {
           continue;
         }
       } else {
-        const line = m1[0].replace('  '.repeat(specialIndent), '');
+        const line = m1[0].replace('  '.repeat(specialIndent + 1), '');
+        debug(indent, '{', line);
 
-        fragment.html += line;
+        if (element.tag != null) {
+          applyIndent(indent as number);
+        }
+        fragment.html += '\n' + line
+
 
         continue;
       }
     }
 
-    switch (m1[3] ?? m1[4]) {
+    switch (m1[3] ?? m1[4] ?? m1[5]) {
+      // deno-lint-ignore no-fallthrough
       case '#': {
+        id1.lastIndex = 0;
         m2 = id1.exec(m1[0]);
-        break;
+
+        if (m2 != null) {
+          const indent = (m2[1]?.length ?? 0) / 2;
+          debug(indent, 'id', m2[2], m2[3], m2[4]);
+
+          if (element.tag != null) {
+            applyIndent(indent);
+          }
+
+          fragment.id = m2[3];
+
+          if (indent === 0) {
+            if (m2[4] != null) {
+              fragment.type = 'range';
+            } else if (m2[2] != null) {
+              fragment.type = 'bare';
+            } else {
+              fragment.type = 'embed';
+              element.id = fragment.id;
+            }
+          }
+
+          break;
+        }
       }
       case '@':
+      case '[':
       // deno-lint-ignore no-fallthrough
       case '::': {
-        m2 = m1[3] === '@' ? null : element1.exec(m1[0]);
-
-        // console.log(m1[0])
-        // console.log(m2)
+        element1.lastIndex = 0;
+        // fall through if m1[3] is a # or @
+        m2 = m1[3] ?? m1[5] != null
+           ? null
+           : element1.exec(m1[0]);
 
         // if null then invalid element selector
         // allow the default text case to handle
         if (m2 != null) {
-          const indent = m2[1]?.length ?? 0 / 2
+          const indent = (m2[1]?.length ?? 0) / 2
               , tg = m2[2]
               , ar = m2[3]
-              , pr = m2[4] != null;
+              , pr = m2[4] === '}'
+              , tx = m2[5];
 
+          debug(indent, 'el', tg, pr, tx);
 
-          if (element.tag != null) {
+          if (element.tag != null || element.indent > indent) {
             applyIndent(indent);
           }
           
@@ -223,10 +252,6 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
               fragment.type = 'root';
               foundRoot = true;
             }
-          } else if (indent === 0) {
-            // fragment type will be set when the
-            // id is parsed
-            fragment.id = element.id;
           }
 
           element.indent = indent;
@@ -260,16 +285,50 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
             }
           }
 
-          if (pr) {
+          if (!pr) {
+            element.text = tx;
+          } else {
             specialIndent = indent;
-            applyIndent(indent + 1);
           }
+
           break;
         }
 
-        m2 = directive1.exec(m1[0]);
+        m2 = m1[3] != null
+           ? null
+           : attribute1.exec(m1[0]);
+
+        if (m2 != null && element.tag != null) {
+          debug('a', m2[2], m2[3]);
+
+          if (m2[2] === 'id') {
+            if (element.id == null) {
+              element.id = m2[3].trim();
+            }
+          } else if (m2[2] === 'class') {
+            if (element.class != null) {
+              element.class += ' ' + m2[3].trim();
+            } else {
+              element.class = m2[3].trim();
+            }
+          } else if (element.attrs[m2[2]] != null) {
+            element.attrs[m2[2]] += m2[3];
+          } else {
+            element.attrs[m2[2]] = m2[3];
+          }
+
+          break;
+        }
+
+        m2 = m1[5] != null
+            ? null 
+            : directive1.exec(m1[0]);
 
         if (m2 != null) {
+          if (element.tag != null) {
+            applyIndent(0);
+          }
+
           switch (m2[2]) {
             case 'doctype': {
               fragment.html += `<!doctype ${m2[3] ?? 'html'}>`;
@@ -283,8 +342,24 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
 
           break;
         }
+
       }
       default: {
+        const m2 = text1.exec(m1[0]) as RegExpExecArray;
+        if (m2 == null) {
+          break;
+        }
+        const indent = m2[1].length / 2;
+
+        debug(indent, 't', m2[2]);
+
+        if (element.tag != null) {
+          applyIndent(indent);
+
+          fragment.html += m2[2].trim();
+        } else {
+          fragment.html += ' ' + m2[2].trim();
+        }
         break;
       }
     }
