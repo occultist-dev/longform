@@ -1,7 +1,7 @@
 import { paramsRe } from "./reg.ts";
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
-const lines1 = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .+))$/gmi
+const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .+))$/gmi
   , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({|[^\n]+))?/gmi
   , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
   , attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/
@@ -133,7 +133,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
       }
 
       if (targetIndent === 0) {
-        debug('close frag', fragment.type, fragment.id);
+        debug(0, '<', fragment.type, fragment.id);
         if (fragment.type === 'root') {
           output.root = fragment.html;
         } else {
@@ -151,7 +151,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
     }
   }
 
-  while ((m1 = lines1.exec(lf))) {
+  while ((m1 = sniffTestRe.exec(lf))) {
     if (m1[1] === '--') {
       continue;
     }
@@ -242,7 +242,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
               , pr = m2[4] === '{'
           const tx = pr ? null : m2[4]
 
-          debug(indent, 'el', tg, pr, tx);
+          debug(indent, 'e', tg, pr, tx);
 
           if (element.tag != null || element.indent > indent) {
             applyIndent(indent);
@@ -255,9 +255,6 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
               fragment.type = 'root';
               foundRoot = true;
             }
-          }
-          if (indent === 0) {
-            debug('FOUND ROOT', fragment);
           }
 
           element.indent = indent;

@@ -46,7 +46,6 @@ function sanitize(html: string, args: SanitizeArgs): string {
 }
 
 async function validate(html: string, type: 'html' | 'xml' = 'html'): Promise<boolean> {
-  return true;
   const tmpfile = resolve(tmpdir(), randomUUID() + '.html');
   const format = type === 'xml'
     ? '--xml'
@@ -210,7 +209,7 @@ const xml4 = `\
 </h:body>\
 </h:html>\
 `;
-test('It parses an XML string', { only: true }, () => {
+test('It parses an XML string', () => {
   const res = lexer2(lf4, console.log);
 
   console.log(res);
@@ -261,3 +260,4 @@ test('It parses preformatted content', () => {
 
   assert.equal(html, html6);
 })
+
