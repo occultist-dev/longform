@@ -1,8 +1,8 @@
 import { paramsRe } from "./reg.ts";
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
-const lines1 = /^(?:[ ]*(--).*)|(.*(@|#).*)|(?:.*(::).*)|(?:\ \ .*(\[).*)|(?:.+)$/gmi
-  , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::( ({|[^\n]+))?/gmi
+const lines1 = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .+))$/gmi
+  , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({|[^\n]+))?/gmi
   , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
   , attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/
   , preformattedClose = /[ \t]*}[ \t]*/
@@ -33,9 +33,11 @@ let m1: RegExpExecArray | null
 const lf1 = `\
 -- comment
 @doctype:: test
+#element-id
 html::
   pre:: {
-    formatted
+    formatted::
+      test::
   }
   header::
     h1:: Can it do this?
@@ -154,6 +156,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
       continue;
     }
 
+
     // If this is a script tag or preformatted block
     // we want to retain the intended formatting less
     // the indent. Preformatting can apply to any element
@@ -190,7 +193,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
       }
     }
 
-    switch (m1[3] ?? m1[4] ?? m1[5]) {
+    switch (m1[2] ?? m1[3] ?? m1[4]) {
       // deno-lint-ignore no-fallthrough
       case '#': {
         id1.lastIndex = 0;
@@ -226,7 +229,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
       case '::': {
         element1.lastIndex = 0;
         // fall through if m1[3] is a # or @
-        m2 = m1[3] ?? m1[5] != null
+        m2 = m1[2] ?? m1[4] != null
            ? null
            : element1.exec(m1[0]);
 
@@ -236,8 +239,8 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
           const indent = (m2[1]?.length ?? 0) / 2
               , tg = m2[2]
               , ar = m2[3]
-              , pr = m2[4] === '}'
-              , tx = m2[5];
+              , pr = m2[4] === '{'
+          const tx = pr ? null : m2[4]
 
           debug(indent, 'el', tg, pr, tx);
 
@@ -252,6 +255,9 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
               fragment.type = 'root';
               foundRoot = true;
             }
+          }
+          if (indent === 0) {
+            debug('FOUND ROOT', fragment);
           }
 
           element.indent = indent;
@@ -285,16 +291,17 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
             }
           }
 
-          if (!pr) {
+          if (!pr && tx != null) {
             element.text = tx;
-          } else {
+          } else if (pr) {
             specialIndent = indent;
           }
 
           break;
         }
 
-        m2 = m1[3] != null
+        attribute1.lastIndex = 0;
+        m2 = m1[2] != null
            ? null
            : attribute1.exec(m1[0]);
 
@@ -320,13 +327,16 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
           break;
         }
 
-        m2 = m1[5] != null
+        directive1.lastIndex = 0;
+        m2 = m1[3] != null
             ? null 
             : directive1.exec(m1[0]);
 
         if (m2 != null) {
+          const indent = (m2[1]?.length ?? 0) / 2;
+
           if (element.tag != null) {
-            applyIndent(0);
+            applyIndent(indent);
           }
 
           switch (m2[2]) {
@@ -335,7 +345,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
               break;
             }
             case 'xml': {
-              fragment.html += `<?xml ${m2[3] ?? 'version="1.0" encoding="UTF-8"'}>`;
+              fragment.html += `<?xml ${m2[3] ?? 'version="1.0" encoding="UTF-8"'}?>`;
               break;
             }
           }

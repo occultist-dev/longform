@@ -151,7 +151,7 @@ const html3 = `\
 <title>My Longform Test</title>\
 <meta name="description" content="This tests the validity and correctness of the longform output">\
 `;
-test('It creates a range of elements', { only: true }, async () => {
+test('It creates a range of elements', async () => {
   const res = lexer2(lf3, console.log);
   console.log(res);
   const html = res.fragments['head'].html as string;
@@ -171,9 +171,9 @@ h:html::
   h:body::
     xdc:bookreview::
       xdc:title:: XML: A Primer
-      h:table:
-        h:tr[agn=center]::
-          h:td Author
+      h:table::
+        h:tr[align=center]::
+          h:td:: Author
           h:td:: Price
           h:td:: Pages
           h:td:: Date
@@ -210,8 +210,10 @@ const xml4 = `\
 </h:body>\
 </h:html>\
 `;
-test('It parses an XML string', () => {
-  const res = lexer2(lf4);
+test('It parses an XML string', { only: true }, () => {
+  const res = lexer2(lf4, console.log);
+
+  console.log(res);
   const xml = res.root as string;
 
   assert.equal(xml, xml4);
