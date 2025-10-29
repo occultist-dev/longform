@@ -35,7 +35,7 @@ export function lexer(longform: string, handler: LexHandler) {
     }
 
     indent = res.groups.w != null ? res.groups.w.length / 2 : 0;
-    
+
     if (res.groups.d != null) {
       match[0] = 'd';
       match[1] = res.groups.d;

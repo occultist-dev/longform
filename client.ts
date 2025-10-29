@@ -371,8 +371,6 @@ export function longform(longform: string, {
             break;
           }
         } else if (preformattedIndent != null) {
-          console.log('INDENT', indent)
-          console.log('PREFORMATTED', preformattedIndent)
           curFragment.html += '\n ' + ' '.repeat((indent - preformattedIndent) * 2)
           break;
         }

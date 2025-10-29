@@ -1,4 +1,3 @@
-import { paramsRe } from "./reg.ts";
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .+))$/gmi
@@ -9,6 +8,7 @@ const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#
   , id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi
   , idnt1 = /^(\ \ )+/
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
+  , paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g
   , voids = new Set([
     'area',
     'base',
@@ -261,28 +261,29 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
           element.tag = tg;
 
           if (ar != null) {
+            debug(indent, 'a', ar);
             while ((m2 = paramsRe.exec(ar))) {
-              if (m2.groups?.i != null && element.id == null) {
-                element.id = m2.groups.i;
-              } else if (m2.groups?.c != null) {
+              if (m2[1] === '#') {
+                element.id = m2[2];
+              } else if (m2[1] === '.') {
                 if (element.class == null) {
-                  element.class = m2.groups.c;
+                  element.class = m2[2];
                 } else {
-                  element.class += ' ' + m2.groups.c;
+                  element.class += ' ' + m2[2];
                 }
-              } else if (m2.groups?.a != null) {
-                if (m2.groups.a === 'id') {
+              } else {
+                if (m2[3] === 'id') {
                   if (element.id == null) {
-                    element.id = m2.groups.v;
+                    element.id = m2[4];
                   }
-                } else if (m2.groups.a === 'class') {
+                } else if (m2[3] === 'class') {
                   if (element.class == null) {
-                    element.class = m2.groups.v;
+                    element.class = m2[4]
                   } else {
-                    element.class += ' ' + m2.groups.v;
+                    element.class += ' ' + m2[4]
                   }
                 } else {
-                  element.attrs[m2.groups.a] = m2.groups?.v;
+                  element.attrs[m2[3]] = m2[4];
                 }
               }
             }

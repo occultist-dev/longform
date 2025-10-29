@@ -42,7 +42,7 @@ export const forOfReStr =
   `::\\[ \\t]*`;
 
 export const textReStr =
-  `(?<t>[^ \\n\\t]+)`;
+  `^(?<t>[^ \\n\\t]+)$`;
 
 export const allowedElementsReStr =
   `(?<e>\\w[\\w\\d\\-_]*)(\\[(?<a>\\w[\\w\\d\\-_ ]*)\\])?`

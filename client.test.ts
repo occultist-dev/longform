@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { longform, type SanitizeArgs } from "./client.ts";
+import { type SanitizeArgs } from "./client.ts";
 import createDOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import vnu from 'vnu-jar';
@@ -10,7 +10,6 @@ import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
-import { rangeStartStr } from "./reg.ts";
 import { lexer2 } from "./lexer2.ts";
 
 const window = new JSDOM('').window;
@@ -209,7 +208,7 @@ const xml4 = `\
 </h:body>\
 </h:html>\
 `;
-test('It parses an XML string', () => {
+test('It parses an XML string', { only: true }, () => {
   const res = lexer2(lf4, console.log);
 
   console.log(res);
