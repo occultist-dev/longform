@@ -30,19 +30,6 @@ let m1: RegExpExecArray | null
   , m2: RegExpExecArray | null;
 
 
-const lf1 = `\
--- comment
-@doctype:: test
-#element-id
-html::
-  pre:: {
-    formatted::
-      test::
-  }
-  header::
-    h1:: Can it do this?
-`;
-
 function makeElement(indent: number = 0): WorkingElement {
   return {
     indent,
@@ -68,11 +55,18 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
   };
 }
 
-export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}) {
+/**
+ * Parses a longform document into a object containing the root and fragments
+ * in the output format.
+ *
+ * @param {string} doc - The longform document to parse.
+ * @returns {Longform}
+ */
+export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): Longform {
   let foundRoot: boolean = false
     , skipping: boolean = false
-      // used for scripts and preformat
-    , specialIndent: number | null = null
+    , verbatimIndent: number | null = null
+    , verbatimFirst: boolean = false
     , element: WorkingElement = makeElement()
     , chunk: WorkingChunk | null = makeChunk()
     , fragment: WorkingFragment = makeFragment();
@@ -151,7 +145,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
     }
   }
 
-  while ((m1 = sniffTestRe.exec(lf))) {
+  while ((m1 = sniffTestRe.exec(doc))) {
     if (m1[1] === '--') {
       continue;
     }
@@ -161,7 +155,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
     // we want to retain the intended formatting less
     // the indent. Preformatting can apply to any element
     // by ending the declaration with `:: {`.
-    if (specialIndent != null) {
+    if (verbatimIndent != null) {
       // inside a script or preformatted block
       idnt1.lastIndex = 0;
       m2 = idnt1.exec(m1[0]);
@@ -169,25 +163,31 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
         ? null
         : m2[0].length / 2;
 
-      if (m2 == null || indent as number <= specialIndent) {
+      if (m2 == null || indent as number <= verbatimIndent) {
         fragment.html += '\n';
         debug(indent, '}', m2?.[0]);
 
-        applyIndent(specialIndent);
-        specialIndent = null;
+        applyIndent(verbatimIndent);
+        verbatimIndent = null;
 
         if (preformattedClose.test(m1[0])) {
           continue;
         }
       } else {
-        const line = m1[0].replace('  '.repeat(specialIndent + 1), '');
+        const line = m1[0].replace('  '.repeat(verbatimIndent + 1), '');
         debug(indent, '{', line);
 
         if (element.tag != null) {
           applyIndent(indent as number);
         }
-        fragment.html += '\n' + line
 
+        if (!verbatimFirst) {
+          fragment.html += '\n';
+        } else {
+          verbatimFirst = true;
+        }
+          
+        fragment.html += line
 
         continue;
       }
@@ -249,6 +249,7 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
           }
           
           if (indent === 0 && fragment.id == null) {
+            debug('FOUND ROOT', foundRoot, fragment);
             if (foundRoot) {
               skipping = true;
             } else {
@@ -292,7 +293,8 @@ export function lexer2(lf: string = lf1, debug: (...d: any[]) => void = () => {}
           if (!pr && tx != null) {
             element.text = tx;
           } else if (pr) {
-            specialIndent = indent;
+            verbatimFirst = true;
+            verbatimIndent = indent;
           }
 
           break;

@@ -1,8 +1,6 @@
+import { longform } from './longform.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { type SanitizeArgs } from "./client.ts";
-import createDOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
 import vnu from 'vnu-jar';
 import { execFile } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -10,39 +8,6 @@ import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
-import { lexer2 } from "./lexer2.ts";
-
-const window = new JSDOM('').window;
-const DOMPurify = createDOMPurify(window);
-
-function sanitize(html: string, args: SanitizeArgs): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: args.elements.map((element) => {
-      if (typeof element === 'string') {
-        return element;
-      }
-
-      return element.name;
-    }),
-    ADD_ATTR: (attr, tag) => {
-      if (args.attributes.includes(attr)) {
-        return true;
-      }
-
-      for (const element of args.elements) {
-        if (typeof element === 'string') {
-          continue;
-        }
-
-        if (element.name === tag) {
-          return element.attributes.includes(attr);
-        }
-      }
-
-      return false;
-    }
-  });
-}
 
 async function validate(html: string, type: 'html' | 'xml' = 'html'): Promise<boolean> {
   const tmpfile = resolve(tmpdir(), randomUUID() + '.html');
@@ -100,7 +65,7 @@ const html1 = `\
 <body><h1>Longform h1</h1></body></html>`;
 
 test('It creates a root element with doctype', async () => {
-  const res = lexer2(lf1, console.log);
+  const res = longform(lf1, console.log);
   const html = res.root as string;
 
   assert(await validate(html));
@@ -129,7 +94,7 @@ longform syntax, <strong>but they have to be \
 allowed using longform directives</strong>.</p>\
 </div>`;
 test('It creates an ided element with inline html copy', async () => {
-  const res = lexer2(lf2, console.log);
+  const res = longform(lf2, console.log);
   console.log(res);
   const html = res.fragments['page-info'].html;
 
@@ -150,7 +115,7 @@ const html3 = `\
 <meta name="description" content="This tests the validity and correctness of the longform output">\
 `;
 test('It creates a range of elements', async () => {
-  const res = lexer2(lf3, console.log);
+  const res = longform(lf3, console.log);
   console.log(res);
   const html = res.fragments['head'].html as string;
   console.log(html);
@@ -209,7 +174,7 @@ const xml4 = `\
 </h:html>\
 `;
 test('It parses an XML string', { only: true }, () => {
-  const res = lexer2(lf4, console.log);
+  const res = longform(lf4, console.log);
 
   console.log(res);
   const xml = res.root as string;
@@ -226,14 +191,13 @@ pre::
   }
 `;
 const html5 = `\
-<pre><code>
-div::
+<pre><code>div::
   Example longform
   <em>with preformatted html</em>
 </code></pre>\
 `;
 test('It parses preformatted content', () => {
-  const res = lexer2(lf5, console.log);
+  const res = longform(lf5, console.log);
   const html = res.root as string;
 
   assert.equal(html, html5);
@@ -248,15 +212,15 @@ head::
   }
 `;
 const html6 = `\
-<head><script>
-const foo = 'bar';
+<head><script>const foo = 'bar';
 console.log(foo);
 </script></head>\
 `;
 test('It parses preformatted content', () => {
-  const res = lexer2(lf6, console.log);
+  const res = longform(lf6, console.log);
   const html = res.root as string;
 
   assert.equal(html, html6);
 })
+
 

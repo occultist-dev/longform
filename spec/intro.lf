@@ -1,17 +1,4 @@
 
-@doctype:: html
-html::
-  head::
-    #[head]
-  body::
-    #[header]
-
-    ol#toc::
-      li::
-        a[href=#language-intro]:: Language Intro
-    #[language-intro]
-
-
 #head [
   title:: Longform Working Specification
   meta::
@@ -274,7 +261,7 @@ section::
   h3:: Preformatted text
 
   pre::
-    code:: [
+    code:: {
       div::
         #element-id
         button::
@@ -285,7 +272,7 @@ section::
           <strong>Text content</strong>
 
         button#element-id.class1.class2.class3[type=button]:: <strong>Text content</strong>
-    ]
+    }
 
 
   h3:: Whitespace
@@ -304,4 +291,17 @@ section::
     but they will be written to the output alongside all other text in the native
     output markup.
     
+
+@doctype:: html
+html::
+  head::
+    #[head]
+  body::
+    #[header]
+
+    ol#toc::
+      li::
+        a[href=#language-intro]:: Language Intro
+    #[language-intro]
+
 

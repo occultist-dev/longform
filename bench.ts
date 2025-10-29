@@ -1,7 +1,5 @@
-import { longform } from "./client.ts";
+import { longform } from "./lib/longform.ts";
 import { marked } from 'marked';
-import { lexer } from "./lexer.ts";
-import { lexer2 } from "./lexer2.ts";
 import * as commonmark from 'commonmark';
 import markdownit from 'markdownit';
 
@@ -62,7 +60,7 @@ console.log('foo');
 `;
 
 console.log('LONGFORM OUTPUT');
-console.log(longform(lf, {}, (html) => html).root);
+console.log(longform(lf).root);
 console.log()
 
 console.log('MARKED OUTPUT');
@@ -77,27 +75,19 @@ console.log('MARKDOWN-IT OUTPUT');
 console.log(mdit.render(md));
 console.log()
 
-const json = JSON.stringify(lexer2(lf))
+const json = JSON.stringify(longform(lf))
 
 console.log('JSON OUTPUT');
 console.log(json);
 console.log();
 
 Deno.bench('Longform', { n: 10_000 },  () => {
-  lexer2(lf);
+  longform(lf);
 });
 
 Deno.bench('JSON', { n: 10_000 }, () => {
   JSON.parse(json);
 })
-
-Deno.bench('Lexer old', { n: 10_000 },  () => {
-  lexer(lf, () => {});
-});
-
-Deno.bench('Longform old', { n: 10_000 }, () => {
-  longform(lf, {}, (html) => html);
-});
 
 Deno.bench('Marked', { n: 10_000 }, () => {
   marked.parse(md);
