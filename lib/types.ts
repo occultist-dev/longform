@@ -29,10 +29,17 @@ export type FragmentType =
   | 'template'
 ;
 
+export type FragmentRef = {
+  id: string;
+  start: number;
+  end: number;
+};
+
 export type WorkingFragment = {
   id?: string;
   type: FragmentType;
   html: string;
+  refs: FragmentRef[];
   chunks: WorkingChunk[];
   els: WorkingElement[];
 };

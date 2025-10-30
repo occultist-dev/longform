@@ -9,6 +9,7 @@ const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#
   , idnt1 = /^(\ \ )+/
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
   , paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g
+  , refRe = /#\[([\w\-]+)\]/g
   , voids = new Set([
     'area',
     'base',
@@ -52,6 +53,7 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
     html: '',
     els: [],
     chunks: [],
+    refs: [],
   };
 }
 
@@ -63,14 +65,20 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
  * @returns {Longform}
  */
 export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): Longform {
-  let foundRoot: boolean = false
-    , skipping: boolean = false
+  let skipping: boolean = false
+    , textIndent: number | null = null
     , verbatimIndent: number | null = null
     , verbatimFirst: boolean = false
     , element: WorkingElement = makeElement()
     , chunk: WorkingChunk | null = makeChunk()
-    , fragment: WorkingFragment = makeFragment();
-  const output: Longform = Object.create(null);
+    , fragment: WorkingFragment = makeFragment()
+    // the root fragment
+    , root: WorkingFragment | null = null
+    // ids of claimed fragments
+  const claimed: Set<string> = new Set()
+    // parsed fragments
+    , parsed: Map<string, WorkingFragment> = new Map()
+    , output: Longform = Object.create(null);
 
   output.fragments = Object.create(null);
   
@@ -129,13 +137,9 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
       if (targetIndent === 0) {
         debug(0, '<', fragment.type, fragment.id);
         if (fragment.type === 'root') {
-          output.root = fragment.html;
+          root = fragment;
         } else {
-          output.fragments[fragment.id as string] = {
-            type: fragment.type as FragmentType,
-            id: fragment.id as string,
-            html: fragment.html,
-          };
+          parsed.set(fragment.id, fragment);
         }
 
         fragment = makeFragment();
@@ -167,8 +171,9 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         fragment.html += '\n';
         debug(indent, '}', m2?.[0]);
 
-        applyIndent(verbatimIndent);
+        applyIndent(indent);
         verbatimIndent = null;
+        verbatimFirst = false;
 
         if (preformattedClose.test(m1[0])) {
           continue;
@@ -181,13 +186,18 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
           applyIndent(indent as number);
         }
 
-        if (!verbatimFirst) {
-          fragment.html += '\n';
+        if (verbatimFirst) {
+          verbatimFirst = false;
         } else {
-          verbatimFirst = true;
+          fragment.html += '\n';
         }
           
         fragment.html += line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
 
         continue;
       }
@@ -201,11 +211,13 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 
         if (m2 != null) {
           const indent = (m2[1]?.length ?? 0) / 2;
-          debug(indent, 'id', m2[2], m2[3], m2[4]);
 
-          if (element.tag != null) {
+          if (element.tag != null || textIndent != null) {
             applyIndent(indent);
+            textIndent = null;
           }
+
+          debug(indent, 'id', m2[2], m2[3], m2[4]);
 
           fragment.id = m2[3];
 
@@ -244,23 +256,27 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 
           debug(indent, 'e', tg, pr, tx);
 
-          if (element.tag != null || element.indent > indent) {
+          if (
+            element.tag != null ||
+            element.indent > indent
+          ) {
             applyIndent(indent);
-          }
-          
-          if (indent === 0 && fragment.id == null) {
-            debug('FOUND ROOT', foundRoot, fragment);
-            if (foundRoot) {
-              skipping = true;
-            } else {
-              fragment.type = 'root';
-              foundRoot = true;
-            }
           }
 
           element.indent = indent;
           element.tag = tg;
 
+          textIndent = null;
+          
+          if (indent === 0 && fragment.id == null) {
+            if (root != null) {
+              skipping = true;
+            } else {
+              fragment.type = 'root';
+              root = fragment;
+            }
+          }
+          
           if (ar != null) {
             debug(indent, 'a', ar);
             while ((m2 = paramsRe.exec(ar))) {
@@ -335,9 +351,11 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         if (m2 != null) {
           const indent = (m2[1]?.length ?? 0) / 2;
 
-          if (element.tag != null) {
+          if (element.tag != null || textIndent != null) {
             applyIndent(indent);
           }
+
+          debug(indent, 'd', m2[2], m2[3]);
 
           switch (m2[2]) {
             case 'doctype': {
@@ -355,27 +373,108 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 
       }
       default: {
-        const m2 = text1.exec(m1[0]) as RegExpExecArray;
+        m2 = text1.exec(m1[0]) as RegExpExecArray;
+
         if (m2 == null) {
           break;
         }
         const indent = m2[1].length / 2;
+        const tx = m2[2].trim();
+
 
         debug(indent, 't', m2[2]);
 
         if (element.tag != null) {
           applyIndent(indent);
 
-          fragment.html += m2[2].trim();
+          fragment.html += tx;
         } else {
-          fragment.html += ' ' + m2[2].trim();
+          fragment.html += ' ' + tx;
         }
+
+        textIndent = indent;
+
+        while ((m2 = refRe.exec(tx))) {
+          const start = fragment.html.length + m2.index - tx.length;
+
+          fragment.refs.push({
+            id: m2[1],
+            start,
+            end: start + m2[0].length,
+          });
+        }
+
         break;
       }
     }
   }
 
   applyIndent(0);
+
+  const arr = Array.from(parsed.values());
+
+  function flatten(fragment: WorkingFragment): WorkingFragment {
+    // work backwards so we don't change the html string length
+    // for the later replacements
+    for (let j = fragment.refs.length - 1; j >= 0; j--) {
+      const ref = fragment.refs[j];
+
+      if (claimed.has(ref.id) || !parsed.has(ref.id)) {
+        fragment.html = fragment.html.slice(0, ref.start)
+          + fragment.html.slice(ref.end)
+      } else {
+        const child = flatten(parsed.get(ref.id));
+
+        fragment.html = fragment.html.slice(0, ref.start)
+          + child.html
+          + fragment.html.slice(ref.end);
+
+        if (child.type === 'embed') {
+          claimed.add(child.id)
+        }
+      }
+    }
+
+    fragment.refs = [];
+
+    return fragment;
+  }
+
+  for (let i = 0; i < parsed.size + 1; i++) {
+    let fragment: WorkingFragment;
+    
+    if (i === 0 && root == null) {
+      continue;
+    } else if (i === 0) {
+      fragment = root;
+    } else {
+      fragment = arr[i - 1];
+    }
+
+    if (fragment.refs.length === 0) {
+      continue;
+    }
+
+    flatten(fragment)
+  }
+
+  if (root.html != null) {
+    output.root = root.html;
+  }
+
+  for (let i = 0; i < arr.length; i++) {
+    const fragment = arr[i];
+
+    if (fragment == null || claimed.has(fragment.id)) {
+      continue;
+    }
+
+    output.fragments[fragment.id] = {
+      id: fragment.id,
+      type: fragment.type,
+      html: fragment.html,
+    };
+  }
 
   return output;
 }

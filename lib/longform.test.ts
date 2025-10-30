@@ -173,7 +173,7 @@ const xml4 = `\
 </h:body>\
 </h:html>\
 `;
-test('It parses an XML string', { only: true }, () => {
+test('It parses an XML string', () => {
   const res = longform(lf4, console.log);
 
   console.log(res);
@@ -222,5 +222,58 @@ test('It parses preformatted content', () => {
 
   assert.equal(html, html6);
 })
+
+const lf7 = `
+#meta [
+  title:: Ref test
+  meta::
+    [name=description]
+    [content=Tests referencing other frags]
+]
+
+#footer::
+footer::
+  This is the footer
+
+@doctype:: html
+html[lang=en]::
+  head::
+    #[meta]
+  body::
+    Test #[header]
+    #[main]
+    #[footer]
+
+#header
+header::
+  hgroup::
+    h1:: Ref test
+    p:: Tests referenceing other frags
+
+#p2
+p::
+  The second p tag.
+
+#main
+main::
+  #[p1]
+  #[p2]
+
+#p1
+p::
+  The first p tag.
+`;
+
+test('It embeds referenced fragments', { only: true }, async () => {
+  const res = longform(lf7, console.log);
+
+  console.log(res);
+  console.log(await prettier.format(res.root as string, {
+    parser: 'html',
+  }));
+});
+
+
+
 
 

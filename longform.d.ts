@@ -15,10 +15,16 @@ declare module "types" {
         els: WorkingElement[];
     };
     export type FragmentType = 'root' | 'embed' | 'bare' | 'range' | 'template';
+    export type FragmentRef = {
+        id: string;
+        start: number;
+        end: number;
+    };
     export type WorkingFragment = {
         id?: string;
         type: FragmentType;
         html: string;
+        refs: FragmentRef[];
         chunks: WorkingChunk[];
         els: WorkingElement[];
     };

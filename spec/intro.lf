@@ -2,9 +2,28 @@
 #head [
   title:: Longform Working Specification
   meta::
-    [name=content]
-    [description=Working specification for the markup and templating language Longform]
+    [name=description]
+    [content=Working specification for the markup and templating language Longform]
+  script::
+    console.log('HELLO FROM JAVASCRIPT');
+  }
 ]
+
+@doctype:: html
+html[lang=en]::
+  head::
+    #[head]
+  body::
+    #[header]
+
+    ul#toc::
+      li::
+        a[href=#language-intro]:: Language Intro
+      li::
+        a[href=#syntax]:: Syntax
+    #[language-intro]
+    #[syntax]
+    #[elements]
 
 
 #header
@@ -39,7 +58,6 @@ section::
     DOMPurify</a>, or in the future an instance of the
     <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer">
     HTML Sanitizer</a>.
-
 
 #syntax
 section::
@@ -131,6 +149,8 @@ section::
         <title data-lf="range-fragment">...</title>
         <meta data-lf="range-fragment" ...>
       }
+  div::
+    Test
 
 #elements
 section::
@@ -141,10 +161,10 @@ section::
     A sole element tag can be outputted using the element name followed
     by two semicolons <code>::</code>.
 
-    pre::
-      code:: {
-        div::
-      }
+  pre::
+    code:: {
+      div::
+    }
 
   h3:: Element attributes
   p::
@@ -291,17 +311,4 @@ section::
     but they will be written to the output alongside all other text in the native
     output markup.
     
-
-@doctype:: html
-html::
-  head::
-    #[head]
-  body::
-    #[header]
-
-    ol#toc::
-      li::
-        a[href=#language-intro]:: Language Intro
-    #[language-intro]
-
 
