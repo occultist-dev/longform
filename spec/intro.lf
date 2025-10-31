@@ -4,9 +4,26 @@
   meta::
     [name=description]
     [content=Working specification for the markup and templating language Longform]
-  script::
-    console.log('HELLO FROM JAVASCRIPT');
-  }
+  style:: {{
+    :root, body {
+      margin: 0;
+      padding: 0;
+      font-size: 18px;
+      line-height: 26px;
+      font-family: sans-serif;
+    }
+    header, main {
+      max-width: 50rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    p {
+      font-size: 1rem;
+    }
+    small {
+      font-size: .8rem;
+    }
+  }}
 ]
 
 @doctype:: html
@@ -15,7 +32,6 @@ html[lang=en]::
     #[head]
   body::
     header::
-      a.to-content[href=#main]:: Jump to content
       hgroup::
         h1:: Longform Working Specification
         p::
@@ -25,9 +41,14 @@ html[lang=en]::
           a[href=#language-intro]:: Language Intro
         li::
           a[href=#syntax]:: Syntax
+        li::
+          a[href=#fragments]:: Fragments
+        li::
+          a[href=#elements]:: Elements
     main#main::
       #[language-intro]
       #[syntax]
+      #[fragments]
       #[elements]
       #[templates]
       #[selecting-from-dom]
@@ -42,44 +63,66 @@ section::
     language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>.
     A longform document can be parsed to a complete document in the output format
     or as fragments to be used by a application as a source of markup when generating a
-    document, or in a DOM environment.
+    document, or when manipulating DOM in a browser environment.
+
+  pre[aria-describedby=simple-markup-example]::
+    code:: {
+      header::
+        hgroup::
+          h1:: Longform Working Specification
+          p::
+            A markup and templating language.
+    }
   p::
-    The Longform syntax is a superset of HTML and XML, there are no restraints
-    on what elements it can output, so it plays well with custom elements and elements
-    which might be added to HTML in the future. Longform also adds support for
-    directives which can alter how a block of Longform or plain HTML / XML is processed.
+    Unlike <b class=keyword>Markdown</b>, which excels in marking up article content
+    but cannot express more recent additions to the HTML spec without falling back to
+    HTML, the Longform syntax adds no constraints on the possible markup
+    of the output format. This means Longform plays well with custom HTML elements and
+    elements and attributes which might be added to HTML in the future. And in being
+    able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code>
+    it can be used effectively for static content markup for regions of the website beyond
+    the main content.
+  p::
+    Longform also supports directives which alter how a block of Longform or plain
+    HTML / XML is processed. This specification will formalize directives which may be
+    used in a browser environment using a minimal Longform parser.
   p::
     For example, in a Longform template the directives <code>@allow-elements</code> and
     <code>@allow-attributes</code> can be used to allow user defined markup to be used
-    in a template which only allows the specified elements to added to the final markup.
+    in a template while filtering out any exempt markup.
     User input markup in the Longform syntax will have filtering rules applied by the 
-    lonform parser, any embedded HTML or XML content will require an external serializer
+    Longform parser, while embedded HTML or XML content will require that an external serializer
     such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to
-    apply the specified rules.
+    hook into the parser and apply the rules to the user defined content.
+
   pre[aria-describedby=template-sanitization-example]::
     code:: {
       @template
       ##card
-      section.card::
+      section.card.note-#{position}::
         header::
           h3:: #{title}
 
         @allow-attributes:: lang dir
-        @allow-elements:: details[open name] summary h4 h5 p strong em b i
+        @allow-elements:: details[open name] summary h4 p strong em a[href target]
         div.card-content::
           ##{content}
     }
   p#template-sanitization-example::
     small::
       In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
-      and XML entities whereas the <code>#{{content}}</code> expansion will filter any elements
-      and attributes not explicitly allowed by the directive from the resulting markup.
+      and XML entities whereas the <code>##{content}</code> expansion will filter any elements
+      and attributes not explicitly allowed by the directive from the resulting markup. These
+      directives can be used many times through a document allowing user defined markup to have
+      rules appropriate for the context applied.
+
   p::
     Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb
-    when minified and gzipped. This is likely to grow but is unlikely to reach the size
-    of commonmark at 47.6kb or marked at 12kb. The parser is also faster since it
-    can detect the need to close a tag based of the amount of whitespace in front of it
-    instead of with an abstract syntax tree.
+    when minified and gzipped and supporting most intended features for the browser environment.
+    The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or
+    Marked at 12kb. The parser is also fast, as it can complete its job by building up the 
+    resulting HTML fragment strings line by line instead of with a two step process of constructing
+    and abstract syntax tree and then forming the valid output markup.
 
 #fragments
 section::
@@ -92,26 +135,26 @@ section::
     which do not have ids assigned are ignored when rendering the output markup
     The root fragment often would have the <code>@doctype</code> or <code>@xml</code>
     directive declared before it to add a <b class=keyword>HTML</b> doctype or
-    <b class=keyword>XML</b> declaration written before it into the ouput markup.
+    <b class=keyword>XML</b> declaration prefixing the output markup.
 
   pre::
     code:: {
       @doctype:: html
       html::
         head::
-          title:: Example Root Fragment
+          title:: Example Root Fragmeno
         body::
           h1:: Example Root Fragment
     }
 
   h3:: Fragments with embedded ids
   p::
-    Fragments can have there ids embedded into the output markup. Embedded ids should be
-    unique to the target document or website where they will be rendered as well as in
-    the Longform document. If a longform fragment references a fragment with an embedded
-    id, any other attempts to reference the embedded fragment will be ignored by the
-    Longform parser. Fragments with embeded ids will also not be exported to be used
-    by external software if they have been referenced in the Longform document.
+    Fragments can have their id embedded into the output markup. Embedded ids should be
+    unique to the target document and the Longform document. If a longform fragment
+    references a fragment with an embedded id, any other attempts to reference the
+    embedded fragment will be ignored by the Longform parser. Fragments with embeded
+    ids will also not be exported to be used by external software if they have been
+    referenced in the Longform document.
 
   pre::
     code:: {
@@ -333,4 +376,18 @@ section::
     but they will be written to the output alongside all other text in the native
     output markup.
     
+#templating
+section::
+  h2:: Templating
+  p::
+    Longform templates only allow key-value pairs inputed with the values being strings.
+    The template is intended to be passed over to the client where the template might
+    be rendered using client side state. It is assumed that the client has its
+    own means to perform conditional statements and iterate, and is optimized to do so,
+    so those functionalities are left to the scripting language to keep the templating logic lean.
+
+
+    
+
+
 

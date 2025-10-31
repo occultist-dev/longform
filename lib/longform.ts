@@ -1,10 +1,10 @@
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
 
-const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .+))$/gmi
-  , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({|[^\n]+))?/gmi
+const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi
+  , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi
   , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
   , attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/
-  , preformattedClose = /[ \t]*}[ \t]*/
+  , preformattedClose = /[ \t]*}}?[ \t]*/
   , id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi
   , idnt1 = /^(\ \ )+/
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
@@ -67,6 +67,7 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
 export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): Longform {
   let skipping: boolean = false
     , textIndent: number | null = null
+    , verbatimSerialize: boolean = true
     , verbatimIndent: number | null = null
     , verbatimFirst: boolean = false
     , element: WorkingElement = makeElement()
@@ -154,7 +155,6 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
       continue;
     }
 
-
     // If this is a script tag or preformatted block
     // we want to retain the intended formatting less
     // the indent. Preformatting can apply to any element
@@ -174,6 +174,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         applyIndent(indent);
         verbatimIndent = null;
         verbatimFirst = false;
+        textIndent = indent;
 
         if (preformattedClose.test(m1[0])) {
           continue;
@@ -191,16 +192,24 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         } else {
           fragment.html += '\n';
         }
-          
-        fragment.html += line
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+        
+        if (verbatimSerialize) {
+          fragment.html += line
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        } else {
+          fragment.html += line;
+        }
 
         continue;
       }
+    }
+
+    if (m1[0].trim() === '') {
+      continue;
     }
 
     switch (m1[2] ?? m1[3] ?? m1[4]) {
@@ -251,7 +260,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
           const indent = (m2[1]?.length ?? 0) / 2
               , tg = m2[2]
               , ar = m2[3]
-              , pr = m2[4] === '{'
+              , pr = m2[4] === '{' || m2[4] === '{{'
           const tx = pr ? null : m2[4]
 
           debug(indent, 'e', tg, pr, tx);
@@ -311,6 +320,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
           } else if (pr) {
             verbatimFirst = true;
             verbatimIndent = indent;
+            verbatimSerialize = m2[4] === '{';
           }
 
           break;
