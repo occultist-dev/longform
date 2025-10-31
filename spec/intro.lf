@@ -14,52 +14,74 @@ html[lang=en]::
   head::
     #[head]
   body::
-    #[header]
-
-    ul#toc::
-      li::
-        a[href=#language-intro]:: Language Intro
-      li::
-        a[href=#syntax]:: Syntax
-    #[language-intro]
-    #[syntax]
-    #[elements]
-
-
-#header
-header::
-  hgroup::
-    h1:: Longform Working Specification
-    p::
-      A markup and templating language.
-
+    header::
+      a.to-content[href=#main]:: Jump to content
+      hgroup::
+        h1:: Longform Working Specification
+        p::
+          A markup and templating language.
+      ul#toc::
+        li::
+          a[href=#language-intro]:: Language Intro
+        li::
+          a[href=#syntax]:: Syntax
+    main#main::
+      #[language-intro]
+      #[syntax]
+      #[elements]
+      #[templates]
+      #[selecting-from-dom]
+      #[uri-fragments]
+      #[http-patch]
 
 #language-intro
 section::
   h2:: Language Intro
   p::
-    <strong>Longform</strong> is an easy to read markup and templating language that outputs to
-    <b class=keyword>HTML</b>, <b class=keyword>MathML</b> and <b class=keyword>
-    XML</b>. A longform document can be flattened into longform fragments
-    identifiable by their ids. Fragments can then be embedded within each other
-    as the document is parsed, and they can be exported, to be used by external
-    software when rendering a webpage or to the DOM.
+    <b class=keyword>Longform</b> is an easy to read markup and templating
+    language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>.
+    A longform document can be parsed to a complete document in the output format
+    or as fragments to be used by a application as a source of markup when generating a
+    document, or in a DOM environment.
   p::
-    Longform offers flexibility when embedding user input. Most templating languges
-    have either an escape option, or the option to embed content which is trusted
-    but potentially vulnerable to <b class=keyword>XSS</b>. Longform has directives
-    <code class=keyword>@allow-elements</code> and <b class=keyword>@allow-attributes</b>
-    which can be used to configure what content is allowed when embedding any input
-    content.
+    The Longform syntax is a superset of HTML and XML, there are no restraints
+    on what elements it can output, so it plays well with custom elements and elements
+    which might be added to HTML in the future. Longform also adds support for
+    directives which can alter how a block of Longform or plain HTML / XML is processed.
   p::
-    Longform will honor these directives when rendering it's own markup.
-    When rendering embedded HTML, it allows a sanatizer function to be passed in
-    which might be an instance of <a href="https://github.com/cure53/DOMPurify">
-    DOMPurify</a>, or in the future an instance of the
-    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer">
-    HTML Sanitizer</a>.
+    For example, in a Longform template the directives <code>@allow-elements</code> and
+    <code>@allow-attributes</code> can be used to allow user defined markup to be used
+    in a template which only allows the specified elements to added to the final markup.
+    User input markup in the Longform syntax will have filtering rules applied by the 
+    lonform parser, any embedded HTML or XML content will require an external serializer
+    such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to
+    apply the specified rules.
+  pre[aria-describedby=template-sanitization-example]::
+    code:: {
+      @template
+      ##card
+      section.card::
+        header::
+          h3:: #{title}
 
-#syntax
+        @allow-attributes:: lang dir
+        @allow-elements:: details[open name] summary h4 h5 p strong em b i
+        div.card-content::
+          ##{content}
+    }
+  p#template-sanitization-example::
+    small::
+      In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
+      and XML entities whereas the <code>#{{content}}</code> expansion will filter any elements
+      and attributes not explicitly allowed by the directive from the resulting markup.
+  p::
+    Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb
+    when minified and gzipped. This is likely to grow but is unlikely to reach the size
+    of commonmark at 47.6kb or marked at 12kb. The parser is also faster since it
+    can detect the need to close a tag based of the amount of whitespace in front of it
+    instead of with an abstract syntax tree.
+
+#fragments
 section::
   h2:: Fragments
 
