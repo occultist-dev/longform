@@ -1,9 +1,12 @@
 
 #head [
-  title:: Longform Working Specification
+  title:: Longform Markup Language
   meta::
     [name=description]
-    [content=Working specification for the markup and templating language Longform]
+    [content=A markup and templating language for producing HTML and XML document fragments.]
+  meta::
+    [name=viewport]
+    [content=width=device-width, initial-scale=1.0]
   style:: {{
     :root, body {
       margin: 0;
@@ -12,16 +15,72 @@
       line-height: 26px;
       font-family: sans-serif;
     }
+    body {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-bottom: 5rem;
+    }
     header, main {
+      width: 100%;
       max-width: 50rem;
+      margin-top: 4rem;
       margin-left: auto;
       margin-right: auto;
+    }
+    hgroup p {
+      font-style: italic;
+    }
+    main {
+      anchor-name: --main;
+    }
+    #toc, #toc ul, #toc li {
+      list-style-type: none;
+    }
+    #toc {
+      padding-left: 0;
+
+      ul {
+        padding-left: 1rem;
+      }
+    }
+    a:visited {
+      color: blue;
     }
     p {
       font-size: 1rem;
     }
     small {
       font-size: .8rem;
+    }
+    pre {
+      background-color: #e4e4e4;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+      padding: .5rem;
+      border-radius: 3px;
+    }
+    dd {
+      margin-left: 0;
+      margin-bottom: 2rem;
+    }
+    details {
+      border: solid 1px #333333;
+      border-radius: 3px;
+      padding: .5rem;
+
+      >:last-child {
+        margin-bottom: 0;
+      }
+    }
+    @media screen and (min-width: 100rem) {
+      #toc-container {
+        position: relative;
+      }
+      #toc {
+        position: fixed;
+        left: calc(100dvw / 2 - 42rem);
+      }
     }
   }}
 ]
@@ -33,27 +92,61 @@ html[lang=en]::
   body::
     header::
       hgroup::
-        h1:: Longform Working Specification
+        h1:: Longform Markup Language
         p::
-          A markup and templating language.
-      ul#toc::
-        li::
-          a[href=#language-intro]:: Language Intro
-        li::
-          a[href=#syntax]:: Syntax
-        li::
-          a[href=#fragments]:: Fragments
-        li::
-          a[href=#elements]:: Elements
+          A markup and templating language for producing HTML and XML document fragments.
+      nav::
+        ul#toc::
+          li::
+            strong::
+              a[href=#language-intro]:: Language Intro
+          li::
+            strong::
+              a[href=#syntax]:: Syntax
+          li::
+            strong::
+              a[href=#fragments]:: Fragments
+          li::
+            strong::
+              a[href=#elements]:: Elements
+          li::
+            strong::
+              a[href=#http-patch]:: HTTP Patch Support
+          li::
+            strong::
+              a[href=#directives]:: Directives
+
+            ul::
+              li::
+                a[href=#directive-url]:: <code>@url</code>
+              li::
+                a[href=#directive-patchable]:: <code>@patchable</code>
+              li::
+                a[href=#directive-doctype]:: <code>@doctype</code>
+              li::
+                a[href=#directive-xml]:: <code>@xml</code>
+              li::
+                a[href=#directive-editable]:: <code>@editable</code>
+              li::
+                a[href=#directive-global]:: <code>@global</code>
+              li::
+                a[href=#directive-allow-elements]:: <code>@allow-elements</code>
+              li::
+                a[href=#directive-allow-attributes]:: <code>@allow-attributes</code>
+              li::
+                a[href=#directive-allow-data-attributes]:: <code>@allow-data-attributes</code>
+              li::
+                a[href=#directive-allow-all]:: <code>@allow-all</code>
     main#main::
       #[language-intro]
       #[syntax]
       #[fragments]
       #[elements]
-      #[templates]
+      #[templating]
       #[selecting-from-dom]
       #[uri-fragments]
       #[http-patch]
+      #[directives]
 
 #language-intro
 section::
@@ -65,7 +158,7 @@ section::
     or as fragments to be used by a application as a source of markup when generating a
     document, or when manipulating DOM in a browser environment.
 
-  pre[aria-describedby=simple-markup-example]::
+  pre::
     code:: {
       header::
         hgroup::
@@ -108,13 +201,15 @@ section::
         div.card-content::
           ##{content}
     }
-  p#template-sanitization-example::
-    small::
-      In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
-      and XML entities whereas the <code>##{content}</code> expansion will filter any elements
-      and attributes not explicitly allowed by the directive from the resulting markup. These
-      directives can be used many times through a document allowing user defined markup to have
-      rules appropriate for the context applied.
+
+  aside#template-sanitization-example::
+    p::
+      small::
+        In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
+        and XML entities whereas the <code>##{content}</code> expansion will filter any elements
+        and attributes not explicitly allowed by the directive from the resulting markup. These
+        directives can be used many times through a document allowing user defined markup to have
+        rules appropriate for the context applied.
 
   p::
     Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb
@@ -160,7 +255,7 @@ section::
     code:: {
       #embedded-id
       section::
-        h2:: A fragment which can be referenced by its <a href="#embedded-id>id</a>
+        h2:: A fragment which can be referenced by its <a href=#embedded-id>id</a>
     }
 
   pre::
@@ -386,8 +481,223 @@ section::
     own means to perform conditional statements and iterate, and is optimized to do so,
     so those functionalities are left to the scripting language to keep the templating logic lean.
 
+#http-patch
+section::
+  h2:: HTTP Patch support
+  p::
+    Longform can 
+
+#directives
+section::
+  h2:: Directives
+
+  dl::
+    dt#directive-url::
+      b:: <code>@url</code>
+    dd::
+      p::
+        Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code>
+        using the <code>Accept</code> header <b>text/longform</b> should produce the same
+        document unless it has since been modified.
+
+      pre::
+        code:: {
+          @url:: https://example.com/blog/article-1
+        }
+    dt#directive-patchable::
+      b:: <code>@patchable</code>
+    dd::
+      p::
+        Asserts to the client that the document can be patched using a HTTP Patch request
+        and the <code>Content-Type</code> header <b>text/longform</b>.
+        The <code>@patchable</code> directive should be ignored unless the <code>@url</code>
+        directive is used.
+      pre::
+        code:: {
+          @url:: http://example.com/blog/longform-1
+          @patchable
+        }
+    dt#directive-doctype::
+      b:: <code>@doctype</code>
+    dd::
+      p::
+        Inserts a doctype declaration before a fragment starts.
+      pre::
+        code:: {
+          @doctype:: html
+          html[lang=en]::
+            head::
+              ...
+            body::
+              ...
+        }
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <!doctype html>
+            <html lang="en">
+              <head>...</head>
+              <body>...</body>
+            </html>
+          }
+    dt#directive-xml::
+      b:: <code>@xml</code>
+    dd::
+      p::
+        Inserts an XML declaration before a fragment starts.
+      pre::
+        code:: {
+          @xml:: version="1.0" encoding="UTF-8"
+          html::
+            [xmlns=http://www.w3.org/HTML/1998/html4]
+            [xmlns:xdc=http://www.xml.com/books]
+
+            body::
+              ...
+        }
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <?xml version="1.0" encoding="UTF-8"?>
+            <html
+              xmlns="http://www.w3.org/HTML/1998/html4"
+              xmlns:xdc="http://www.xml.com/books"
+            >
+              <body>
+                ...
+              </body>
+            </html>
+          }
+    dt#directive-editable::
+      b:: <code>@editable</code>
+    dd::
+      p::
+        Marks the children of an element as editable in a patch request.
+        The element cannot be within a template and must have a Longform
+        id set on it.
+      pre::
+        code:: {
+          @editable
+          #edit-me
+          div::
+            This content is editable.
+        }
+    dt#directive-global::
+      b:: <code>@global</code>
+    dd::
+      p::
+        Applies directive rules to an entire Longform document. Directives
+        applied before or within a fragment will typically override globally
+        set rules.
+      pre::
+        code:: {
+          @url:: https://example.com/pages/article-1
+          @patchable
+          @global::
+            @allowed-elements:: h4 p strong em b i small hr br
+        }
+    dt#directive-allow-elements::
+      b:: <code>@allow-elements</code>
+    dd::
+      p::
+        In a template this directive instructs the parser what elements
+        can be rendered when applying non-escaped variable expansion within
+        its scope. If used in a patchable document, client side editors should
+        limit what elements can be edited in the editable element. The
+        directive's rules should also be used to sanitize or reject input when merging
+        edits from a HTTP Patch request into the document on the server.
+      p::
+        Attributes can be allowed on specific elements by listing them in
+        square brackets directly after the element in the directive's arguments.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all elements should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-elements:: a[href target] p strong em
+          div::
+            Edit me!
+        }
+    dt#directive-allow-attributes::
+      b:: <code>@allow-attributes</code>
+    dd::
+      p::
+        In a template this directive instructs the parser what attributes
+        can be rendered when applying non-escaped variable expansion
+        within its scope. If used in a patchable document client side editors
+        can limit what attributes can be added to the markup. The directive's
+        rules should be used to sanitize or reject input when
+        merging edits from a HTTP Patch request into the document on the server.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all attributes should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-attributes:: id name class
+          @allow-elements:: a[href target] p strong em form label[for] input button[submit]
+          div::
+            Edit me...
+        }
+    dt#directive-allow-data-attributes::
+      b:: <code>@allow-data-attributes</code>
+    dd::
+      p::
+        In a template this directive instructs the parser to allow rendering of
+        data-attributes when applying non-escaped variable expansion within its scope.
+        If used in a patchable document client side editors can allow data-attributes
+        to be added to the markup.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all data-attributes should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-data-attributes
+          @allow-attributes:: id name class
+          @allow-elements:: a[href target] p strong em form label[for] input button[submit]
+          div::
+            Edit me...
+        }
+
+    dt#directive-allow-all::
+      b:: <code>@allow-all</code>
+    dd::
+      p::
+        This directive instructs the parser to allow all elements, attributes
+        and data-attributes when performing non-escaped variable expansion or
+        when editing a patchable document.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-all
+          body::
+            Edit me...
+        }
+      
 
     
-
 
 

@@ -1,14 +1,39 @@
-<!doctype html><html lang="en"><head><title>Longform Working Specification</title><meta name="description" content="Working specification for the markup and templating language Longform"><style>:root, body {
+<!doctype html><html lang="en"><head><title>Longform Markup Language</title><meta name="description" content="A markup and templating language for producing HTML and XML document fragments."><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>:root, body {
   margin: 0;
   padding: 0;
   font-size: 18px;
   line-height: 26px;
   font-family: sans-serif;
 }
+body {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 5rem;
+}
 header, main {
+  width: 100%;
   max-width: 50rem;
+  margin-top: 4rem;
   margin-left: auto;
   margin-right: auto;
+}
+hgroup p {
+  font-style: italic;
+}
+main {
+  anchor-name: --main;
+}
+#toc, #toc ul, #toc li {
+  list-style-type: none;
+}
+#toc {
+  padding-left: 0;
+  ul {
+    padding-left: 1rem;
+  }
+}
+a:visited {
+  color: blue;
 }
 p {
   font-size: 1rem;
@@ -16,7 +41,36 @@ p {
 small {
   font-size: .8rem;
 }
-</style></head><body><header><hgroup><h1>Longform Working Specification</h1><p>A markup and templating language.</p></hgroup><ul id="toc"><li><a href="#language-intro">Language Intro</a></li><li><a href="#syntax">Syntax</a></li><li><a href="#fragments">Fragments</a></li><li><a href="#elements">Elements</a></li></ul></header><main id="main"><section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre aria-describedby="simple-markup-example"><code>header::
+pre {
+  background-color: #e4e4e4;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  padding: .5rem;
+  border-radius: 3px;
+}
+dd {
+  margin-left: 0;
+  margin-bottom: 2rem;
+}
+details {
+  border: solid 1px #333333;
+  border-radius: 3px;
+  padding: .5rem;
+  >:last-child {
+    margin-bottom: 0;
+  }
+}
+@media screen and (min-width: 100rem) {
+  #toc-container {
+    position: relative;
+  }
+  #toc {
+    position: fixed;
+    left: calc(100dvw / 2 - 42rem);
+  }
+}
+</style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing HTML and XML document fragments.</p></hgroup><nav><ul id="toc"><li><strong><a href="#language-intro">Language Intro</a></strong></li><li><strong><a href="#syntax">Syntax</a></strong></li><li><strong><a href="#fragments">Fragments</a></strong></li><li><strong><a href="#elements">Elements</a></strong></li><li><strong><a href="#http-patch">HTTP Patch Support</a></strong></li><li><strong><a href="#directives">Directives</a></strong><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
   hgroup::
     h1:: Longform Working Specification
     p::
@@ -30,7 +84,7 @@ section.card.note-#{position}::
   @allow-elements:: details[open name] summary h4 p strong em a[href target]
   div.card-content::
     ##{content}
-</code></pre><p id="template-sanitization-example"><small>In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML and XML entities whereas the <code>##{content}</code> expansion will filter any elements and attributes not explicitly allowed by the directive from the resulting markup. These directives can be used many times through a document allowing user defined markup to have rules appropriate for the context applied.</small></p><p>Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb when minified and gzipped and supporting most intended features for the browser environment. The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or Marked at 12kb. The parser is also fast, as it can complete its job by building up the resulting HTML fragment strings line by line instead of with a two step process of constructing and abstract syntax tree and then forming the valid output markup.</p></section>  <section id="fragments"><h2>Fragments</h2><h3>The root fragment</h3><p>The root fragment is an optional fragment that has no id. There can be only one root fragment in a Longform document. After a root fragment is found, all other fragments which do not have ids assigned are ignored when rendering the output markup The root fragment often would have the <code>@doctype</code> or <code>@xml</code> directive declared before it to add a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing the output markup.</p><pre><code>@doctype:: html
+</code></pre><aside id="template-sanitization-example"><p><small>In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML and XML entities whereas the <code>##{content}</code> expansion will filter any elements and attributes not explicitly allowed by the directive from the resulting markup. These directives can be used many times through a document allowing user defined markup to have rules appropriate for the context applied.</small></p></aside><p>Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb when minified and gzipped and supporting most intended features for the browser environment. The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or Marked at 12kb. The parser is also fast, as it can complete its job by building up the resulting HTML fragment strings line by line instead of with a two step process of constructing and abstract syntax tree and then forming the valid output markup.</p></section>  <section id="fragments"><h2>Fragments</h2><h3>The root fragment</h3><p>The root fragment is an optional fragment that has no id. There can be only one root fragment in a Longform document. After a root fragment is found, all other fragments which do not have ids assigned are ignored when rendering the output markup The root fragment often would have the <code>@doctype</code> or <code>@xml</code> directive declared before it to add a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing the output markup.</p><pre><code>@doctype:: html
 html::
   head::
     title:: Example Root Fragmeno
@@ -38,7 +92,7 @@ html::
     h1:: Example Root Fragment
 </code></pre><h3>Fragments with embedded ids</h3><p>Fragments can have their id embedded into the output markup. Embedded ids should be unique to the target document and the Longform document. If a longform fragment references a fragment with an embedded id, any other attempts to reference the embedded fragment will be ignored by the Longform parser. Fragments with embeded ids will also not be exported to be used by external software if they have been referenced in the Longform document.</p><pre><code>#embedded-id
 section::
-  h2:: A fragment which can be referenced by its &lt;a href=&quot;#embedded-id&gt;id&lt;/a&gt;
+  h2:: A fragment which can be referenced by its &lt;a href=#embedded-id&gt;id&lt;/a&gt;
 </code></pre><pre><samp><code>&lt;section id=&quot;embedded-id&quot;&gt;
   &lt;h2&gt;...&lt;/h2&gt;
 &lt;/section&gt;
@@ -89,4 +143,60 @@ div::
     [type=button]
     &lt;strong&gt;Text content&lt;/strong&gt;
   button#element-id.class1.class2.class3[type=button]:: &lt;strong&gt;Text content&lt;/strong&gt;
-</code></pre><h3>Whitespace</h3><p>Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two spaces out from an element will be outputted as the child of that element.</p><p>Some exceptions for this are when native markup of the output language and text are being processed. Or when in a preformatted block.</p><h4>Comments</h4><p>Comments can be written outside of a fragment using <code>--</code> two hyphens. Within a fragment comments in the output markup language's syntax can be used but they will be written to the output alongside all other text in the native output markup.</p></section>    </main></body></html>
+</code></pre><h3>Whitespace</h3><p>Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two spaces out from an element will be outputted as the child of that element.</p><p>Some exceptions for this are when native markup of the output language and text are being processed. Or when in a preformatted block.</p><h4>Comments</h4><p>Comments can be written outside of a fragment using <code>--</code> two hyphens. Within a fragment comments in the output markup language's syntax can be used but they will be written to the output alongside all other text in the native output markup.</p></section> <section id="templating"><h2>Templating</h2><p>Longform templates only allow key-value pairs inputed with the values being strings. The template is intended to be passed over to the client where the template might be rendered using client side state. It is assumed that the client has its own means to perform conditional statements and iterate, and is optimized to do so, so those functionalities are left to the scripting language to keep the templating logic lean.</p></section>   <section id="http-patch"><h2>HTTP Patch support</h2><p>Longform can</p></section> <section id="directives"><h2>Directives</h2><dl><dt id="directive-url"><b><code>@url</code></b></dt><dd><p>Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code> using the <code>Accept</code> header <b>text/longform</b> should produce the same document unless it has since been modified.</p><pre><code>@url:: https://example.com/blog/article-1
+</code></pre></dd><dt id="directive-patchable"><b><code>@patchable</code></b></dt><dd><p>Asserts to the client that the document can be patched using a HTTP Patch request and the <code>Content-Type</code> header <b>text/longform</b>. The <code>@patchable</code> directive should be ignored unless the <code>@url</code> directive is used.</p><pre><code>@url:: http://example.com/blog/longform-1
+@patchable
+</code></pre></dd><dt id="directive-doctype"><b><code>@doctype</code></b></dt><dd><p>Inserts a doctype declaration before a fragment starts.</p><pre><code>@doctype:: html
+html[lang=en]::
+  head::
+    ...
+  body::
+    ...
+</code></pre><details><summary>Result</summary><pre><samp>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;...&lt;/head&gt;
+  &lt;body&gt;...&lt;/body&gt;
+&lt;/html&gt;
+</samp></pre></details></dd><dt id="directive-xml"><b><code>@xml</code></b></dt><dd><p>Inserts an XML declaration before a fragment starts.</p><pre><code>@xml:: version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;
+html::
+  [xmlns=http://www.w3.org/HTML/1998/html4]
+  [xmlns:xdc=http://www.xml.com/books]
+  body::
+    ...
+</code></pre><details><summary>Result</summary><pre><samp>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;html
+  xmlns=&quot;http://www.w3.org/HTML/1998/html4&quot;
+  xmlns:xdc=&quot;http://www.xml.com/books&quot;
+&gt;
+  &lt;body&gt;
+    ...
+  &lt;/body&gt;
+&lt;/html&gt;
+</samp></pre></details></dd><dt id="directive-editable"><b><code>@editable</code></b></dt><dd><p>Marks the children of an element as editable in a patch request. The element cannot be within a template and must have a Longform id set on it.</p><pre><code>@editable
+#edit-me
+div::
+  This content is editable.
+</code></pre></dd><dt id="directive-global"><b><code>@global</code></b></dt><dd><p>Applies directive rules to an entire Longform document. Directives applied before or within a fragment will typically override globally set rules.</p><pre><code>@url:: https://example.com/pages/article-1
+@patchable
+@global::
+  @allowed-elements:: h4 p strong em b i small hr br
+</code></pre></dd><dt id="directive-allow-elements"><b><code>@allow-elements</code></b></dt><dd><p>In a template this directive instructs the parser what elements can be rendered when applying non-escaped variable expansion within its scope. If used in a patchable document, client side editors should limit what elements can be edited in the editable element. The directive's rules should also be used to sanitize or reject input when merging edits from a HTTP Patch request into the document on the server.</p><p>Attributes can be allowed on specific elements by listing them in square brackets directly after the element in the directive's arguments.</p><p>If this or the <code>@allow-all</code> directives are not used all elements should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
+@allow-elements:: a[href target] p strong em
+div::
+  Edit me!
+</code></pre></dd><dt id="directive-allow-attributes"><b><code>@allow-attributes</code></b></dt><dd><p>In a template this directive instructs the parser what attributes can be rendered when applying non-escaped variable expansion within its scope. If used in a patchable document client side editors can limit what attributes can be added to the markup. The directive's rules should be used to sanitize or reject input when merging edits from a HTTP Patch request into the document on the server.</p><p>If this or the <code>@allow-all</code> directives are not used all attributes should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
+@allow-attributes:: id name class
+@allow-elements:: a[href target] p strong em form label[for] input button[submit]
+div::
+  Edit me...
+</code></pre></dd><dt id="directive-allow-data-attributes"><b><code>@allow-data-attributes</code></b></dt><dd><p>In a template this directive instructs the parser to allow rendering of data-attributes when applying non-escaped variable expansion within its scope. If used in a patchable document client side editors can allow data-attributes to be added to the markup.</p><p>If this or the <code>@allow-all</code> directives are not used all data-attributes should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
+@allow-data-attributes
+@allow-attributes:: id name class
+@allow-elements:: a[href target] p strong em form label[for] input button[submit]
+div::
+  Edit me...
+</code></pre></dd><dt id="directive-allow-all"><b><code>@allow-all</code></b></dt><dd><p>This directive instructs the parser to allow all elements, attributes and data-attributes when performing non-escaped variable expansion or when editing a patchable document.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
+@allow-all
+body::
+  Edit me...
+</code></pre></dd></dl></section></main></body></html>
