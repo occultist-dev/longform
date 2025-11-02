@@ -14,6 +14,8 @@
       font-size: 18px;
       line-height: 26px;
       font-family: sans-serif;
+
+      --body-width: 45rem;
     }
     body {
       padding-left: 1rem;
@@ -22,7 +24,7 @@
     }
     header, main {
       width: 100%;
-      max-width: 50rem;
+      max-width: 45rem;
       margin-top: 4rem;
       margin-left: auto;
       margin-right: auto;
@@ -52,6 +54,10 @@
     small {
       font-size: .8rem;
     }
+    aside {
+      font-family: serif;
+      font-style: italic;
+    }
     pre {
       background-color: #e4e4e4;
       width: 100%;
@@ -73,15 +79,20 @@
         margin-bottom: 0;
       }
     }
-    @media screen and (min-width: 100rem) {
-      #toc-container {
-        position: relative;
-      }
+
+    @media screen and (min-width: 90rem) and (min-height: 510px) {
       #toc {
         position: fixed;
-        left: calc(100dvw / 2 - 42rem);
+        left: calc(50dvw - 38rem);
       }
     }
+
+    @media screen and (min-width: 90rem) and (max-height: 670px) {
+      #toc {
+        bottom: 2rem;
+      }
+    }
+
   }}
 ]
 
@@ -164,13 +175,14 @@ section::
         hgroup::
           h1:: Longform Working Specification
           p::
-            A markup and templating language.
+            A markup and templating language for producing
+            HTML and XML document fragments.
     }
   p::
     Unlike <b class=keyword>Markdown</b>, which excels in marking up article content
     but cannot express more recent additions to the HTML spec without falling back to
     HTML, the Longform syntax adds no constraints on the possible markup
-    of the output format. This means Longform plays well with custom HTML elements and
+    of the output format. As a result Longform plays well with custom HTML elements and
     elements and attributes which might be added to HTML in the future. And in being
     able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code>
     it can be used effectively for static content markup for regions of the website beyond
@@ -222,6 +234,22 @@ section::
 #fragments
 section::
   h2:: Fragments
+
+  aside::
+    p::
+      Longform's primary design goal is to output fragments of HTML in a form that can be
+      rendered by another program into a complete HTML document, and when loaded as DOM in a
+      browser, the fragments can be re-selected and referenced by a Javascript runtime. Since
+      all Longform fragments are static content a Javascript runtime can re-use the
+      existing dom (or clones of) and avoid hydration or re-rendering techniques
+      that are often used by client side libraries.
+    p::
+      To achieve this, depending on the fragment kind, a parser will embed data attributes
+      in a fragment and expose those fragments for reference so the fragments can be selected
+      from the DOM.
+    p::
+      Aside from the root fragment, all fragments have Longform ids. These ids can be used 
+      to reference a fragment from within the Longform document, or from 
 
   h3:: The root fragment
   p::

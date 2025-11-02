@@ -4,6 +4,7 @@
   font-size: 18px;
   line-height: 26px;
   font-family: sans-serif;
+  --body-width: 45rem;
 }
 body {
   padding-left: 1rem;
@@ -12,7 +13,7 @@ body {
 }
 header, main {
   width: 100%;
-  max-width: 50rem;
+  max-width: 45rem;
   margin-top: 4rem;
   margin-left: auto;
   margin-right: auto;
@@ -41,6 +42,10 @@ p {
 small {
   font-size: .8rem;
 }
+aside {
+  font-family: serif;
+  font-style: italic;
+}
 pre {
   background-color: #e4e4e4;
   width: 100%;
@@ -61,21 +66,24 @@ details {
     margin-bottom: 0;
   }
 }
-@media screen and (min-width: 100rem) {
-  #toc-container {
-    position: relative;
-  }
+@media screen and (min-width: 90rem) and (min-height: 510px) {
   #toc {
     position: fixed;
-    left: calc(100dvw / 2 - 42rem);
+    left: calc(50dvw - 38rem);
+  }
+}
+@media screen and (min-width: 90rem) and (max-height: 670px) {
+  #toc {
+    bottom: 2rem;
   }
 }
 </style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing HTML and XML document fragments.</p></hgroup><nav><ul id="toc"><li><strong><a href="#language-intro">Language Intro</a></strong></li><li><strong><a href="#syntax">Syntax</a></strong></li><li><strong><a href="#fragments">Fragments</a></strong></li><li><strong><a href="#elements">Elements</a></strong></li><li><strong><a href="#http-patch">HTTP Patch Support</a></strong></li><li><strong><a href="#directives">Directives</a></strong><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
   hgroup::
     h1:: Longform Working Specification
     p::
-      A markup and templating language.
-</code></pre><p>Unlike <b class=keyword>Markdown</b>, which excels in marking up article content but cannot express more recent additions to the HTML spec without falling back to HTML, the Longform syntax adds no constraints on the possible markup of the output format. This means Longform plays well with custom HTML elements and elements and attributes which might be added to HTML in the future. And in being able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code> it can be used effectively for static content markup for regions of the website beyond the main content.</p><p>Longform also supports directives which alter how a block of Longform or plain HTML / XML is processed. This specification will formalize directives which may be used in a browser environment using a minimal Longform parser.</p><p>For example, in a Longform template the directives <code>@allow-elements</code> and <code>@allow-attributes</code> can be used to allow user defined markup to be used in a template while filtering out any exempt markup. User input markup in the Longform syntax will have filtering rules applied by the Longform parser, while embedded HTML or XML content will require that an external serializer such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to hook into the parser and apply the rules to the user defined content.</p><pre aria-describedby="template-sanitization-example"><code>@template
+      A markup and templating language for producing
+      HTML and XML document fragments.
+</code></pre><p>Unlike <b class=keyword>Markdown</b>, which excels in marking up article content but cannot express more recent additions to the HTML spec without falling back to HTML, the Longform syntax adds no constraints on the possible markup of the output format. As a result Longform plays well with custom HTML elements and elements and attributes which might be added to HTML in the future. And in being able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code> it can be used effectively for static content markup for regions of the website beyond the main content.</p><p>Longform also supports directives which alter how a block of Longform or plain HTML / XML is processed. This specification will formalize directives which may be used in a browser environment using a minimal Longform parser.</p><p>For example, in a Longform template the directives <code>@allow-elements</code> and <code>@allow-attributes</code> can be used to allow user defined markup to be used in a template while filtering out any exempt markup. User input markup in the Longform syntax will have filtering rules applied by the Longform parser, while embedded HTML or XML content will require that an external serializer such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to hook into the parser and apply the rules to the user defined content.</p><pre aria-describedby="template-sanitization-example"><code>@template
 ##card
 section.card.note-#{position}::
   header::
@@ -84,7 +92,7 @@ section.card.note-#{position}::
   @allow-elements:: details[open name] summary h4 p strong em a[href target]
   div.card-content::
     ##{content}
-</code></pre><aside id="template-sanitization-example"><p><small>In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML and XML entities whereas the <code>##{content}</code> expansion will filter any elements and attributes not explicitly allowed by the directive from the resulting markup. These directives can be used many times through a document allowing user defined markup to have rules appropriate for the context applied.</small></p></aside><p>Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb when minified and gzipped and supporting most intended features for the browser environment. The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or Marked at 12kb. The parser is also fast, as it can complete its job by building up the resulting HTML fragment strings line by line instead of with a two step process of constructing and abstract syntax tree and then forming the valid output markup.</p></section>  <section id="fragments"><h2>Fragments</h2><h3>The root fragment</h3><p>The root fragment is an optional fragment that has no id. There can be only one root fragment in a Longform document. After a root fragment is found, all other fragments which do not have ids assigned are ignored when rendering the output markup The root fragment often would have the <code>@doctype</code> or <code>@xml</code> directive declared before it to add a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing the output markup.</p><pre><code>@doctype:: html
+</code></pre><aside id="template-sanitization-example"><p><small>In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML and XML entities whereas the <code>##{content}</code> expansion will filter any elements and attributes not explicitly allowed by the directive from the resulting markup. These directives can be used many times through a document allowing user defined markup to have rules appropriate for the context applied.</small></p></aside><p>Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb when minified and gzipped and supporting most intended features for the browser environment. The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or Marked at 12kb. The parser is also fast, as it can complete its job by building up the resulting HTML fragment strings line by line instead of with a two step process of constructing and abstract syntax tree and then forming the valid output markup.</p></section>  <section id="fragments"><h2>Fragments</h2><aside><p>Longform's primary design goal is to output fragments of HTML in a form that can be rendered by another program into a complete HTML document, and when loaded as DOM in a browser, the fragments can be re-selected and referenced by a Javascript runtime. Since all Longform fragments are static content a Javascript runtime can re-use the existing dom (or clones of) and avoid hydration or re-rendering techniques that are often used by client side libraries.</p><p>To achieve this, depending on the fragment kind, a parser will embed data attributes in a fragment and expose those fragments for reference so the fragments can be selected from the DOM.</p><p>Aside from the root fragment, all fragments have Longform ids. These ids can be used to reference a fragment from within the Longform document, or from</p></aside><h3>The root fragment</h3><p>The root fragment is an optional fragment that has no id. There can be only one root fragment in a Longform document. After a root fragment is found, all other fragments which do not have ids assigned are ignored when rendering the output markup The root fragment often would have the <code>@doctype</code> or <code>@xml</code> directive declared before it to add a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing the output markup.</p><pre><code>@doctype:: html
 html::
   head::
     title:: Example Root Fragmeno

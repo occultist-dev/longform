@@ -1,6 +1,6 @@
 import { watchFile } from 'fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 
@@ -10,7 +10,7 @@ const spec = resolve(dir, 'spec/intro.lf');
 const mod = resolve(dir, 'lib/longform.ts');
 
 async function writeHTML() {
-  const { longform } = await import(mod);
+  const { longform } = await import(pathToFileURL(mod));
   const doc = await readFile(spec, 'utf-8');
   const output = longform(doc);
 
