@@ -42,9 +42,13 @@ p {
 small {
   font-size: .8rem;
 }
-aside {
+aside:not(.warning) {
   font-family: serif;
   font-style: italic;
+}
+aside.warning {
+  border: solid .25rem red;
+  padding: .25rem 1rem;
 }
 pre {
   background-color: #e4e4e4;
@@ -78,7 +82,7 @@ details {
     bottom: 2rem;
   }
 }
-</style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing <b class=keyword> HTML</b> and <b class=keyword>XML</b> document fragments.</p></hgroup><nav><ul id="toc"><li><b><a href="#language-intro">Language Intro</a></b></li><li><b><a href="#syntax">Syntax</a></b></li><li><b><a href="#fragments">Fragments</a></b></li><li><b><a href="#elements">Elements</a></b></li><li><b><a href="#http-patch">HTTP Patch Support</a></b></li><li><b><a href="#directives">Directives</a></b><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
+</style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing <b class=keyword> HTML</b> and <b class=keyword>XML</b> document fragments.</p></hgroup><nav><ul id="toc"><li><b><a href="#language-intro">Language Intro</a></b></li><li><b><a href="#syntax">Syntax</a></b></li><li><b><a href="#fragments">Fragments</a></b></li><li><b><a href="#elements">Elements</a></b></li><li><b><a href="#http-patch">HTTP Patch Support</a></b></li><li><b><a href="#directives">Directives</a></b><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><aside id="wip-notice" class="warning"><p><strong>This document is a work in progress.</strong></p></aside> <section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
   hgroup::
     h1:: Longform Markup Language
     p::
