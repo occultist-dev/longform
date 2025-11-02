@@ -65,6 +65,7 @@
       margin-bottom: 1rem;
       padding: .5rem;
       border-radius: 3px;
+      overflow-x: auto;
     }
     dd {
       margin-left: 0;
