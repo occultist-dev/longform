@@ -1,11 +1,10 @@
 {
-  "name": "@longform/longform",
+  "name": "longform",
   "type": "module",
   "module": "./lib/longform.ts",
   "version": "1.0.0",
   "description": "",
   "main": "dist/longform.js",
-  "types": "./dist/longform.d.ts",
   "scripts": {
     "build": "node build.js",
     "test": "node --test lib/longform.test.ts",
@@ -15,14 +14,6 @@
   "author": "",
   "license": "MIT",
   "packageManager": "pnpm@10.17.1",
-  "devDependencies": {
-    "@types/jsdom": "^27.0.0",
-    "@types/node": "^24.8.1",
-    "dompurify": "^3.3.0",
-    "esbuild": "^0.25.11",
-    "jsdom": "^27.0.1",
-    "typescript": "^5.9.3"
-  },
   "dependencies": {
     "@types/markdown-it": "^14.1.2",
     "commonmark": "^0.31.2",
@@ -31,5 +22,6 @@
     "marked": "^16.4.1",
     "prettier": "^3.6.2",
     "vnu-jar": "^24.10.17"
-  }
+  },
+  "yalcSig": "8d2156d0d500cb126bff02afe21d1142"
 }

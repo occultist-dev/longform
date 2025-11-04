@@ -30,16 +30,19 @@ declare module "types" {
     };
     export type Fragment = {
         id: string;
+        selector: string;
         type: FragmentType;
         html: string;
     };
     export type Longform = {
         root: string | null;
+        selector: string | null;
         fragments: Record<string, Fragment>;
     };
 }
 declare module "longform" {
     import type { Longform } from "types";
+    export * from "types";
     /**
      * Parses a longform document into a object containing the root and fragments
      * in the output format.

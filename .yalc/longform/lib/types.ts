@@ -53,6 +53,5 @@ export type Fragment = {
 
 export type Longform = {
   root: string | null;
-  selector: string | null;
   fragments: Record<string, Fragment>;
 };

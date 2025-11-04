@@ -1,0 +1,803 @@
+
+#head [
+  title:: Longform Markup Language
+  meta::
+    [name=description]
+    [content=A markup and templating language for producing HTML and XML document fragments.]
+  meta::
+    [name=viewport]
+    [content=width=device-width, initial-scale=1.0]
+  style:: {{
+    :root, body {
+      margin: 0;
+      padding: 0;
+      font-size: 18px;
+      line-height: 26px;
+      font-family: sans-serif;
+
+      --body-width: 45rem;
+    }
+    body {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-bottom: 5rem;
+    }
+    header, main {
+      width: 100%;
+      max-width: 45rem;
+      margin-top: 4rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    hgroup p {
+      font-style: italic;
+    }
+    main {
+      anchor-name: --main;
+    }
+    #toc, #toc ul, #toc li {
+      list-style-type: none;
+    }
+    #toc {
+      padding-left: 0;
+
+      ul {
+        padding-left: 1rem;
+      }
+    }
+    a:visited {
+      color: blue;
+    }
+    p {
+      font-size: 1rem;
+    }
+    small {
+      font-size: .8rem;
+    }
+    aside:not(.warning) {
+      font-family: serif;
+      font-style: italic;
+    }
+    aside.warning {
+      border: solid .25rem red;
+      padding: .25rem 1rem;
+    }
+    pre {
+      background-color: #e4e4e4;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+      padding: .5rem;
+      border-radius: 3px;
+      overflow-x: auto;
+    }
+    dd {
+      margin-left: 0;
+      margin-bottom: 2rem;
+    }
+    details {
+      border: solid 1px #333333;
+      border-radius: 3px;
+      padding: .5rem;
+
+      >:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    @media screen and (min-width: 90rem) and (min-height: 510px) {
+      #toc {
+        position: fixed;
+        left: calc(50dvw - 38rem);
+      }
+    }
+
+    @media screen and (min-width: 90rem) and (max-height: 670px) {
+      #toc {
+        bottom: 2rem;
+      }
+    }
+
+  }}
+]
+
+@doctype:: html
+html[lang=en]::
+  head::
+    #[head]
+  body::
+    header::
+      hgroup::
+        h1:: Longform Markup Language
+        p::
+          A markup and templating language for producing <b class=keyword>
+            HTML</b> and <b class=keyword>XML</b> document fragments.
+      nav::
+        ul#toc::
+          li::
+            b::
+              a[href=#language-intro]:: Language Intro
+          li::
+            b::
+              a[href=#syntax]:: Syntax
+          li::
+            b::
+              a[href=#fragments]:: Fragments
+          li::
+            b::
+              a[href=#elements]:: Elements
+          li::
+            b::
+              a[href=#http-patch]:: HTTP Patch Support
+          li::
+            b::
+              a[href=#directives]:: Directives
+
+            ul::
+              li::
+                a[href=#directive-url]:: <code>@url</code>
+              li::
+                a[href=#directive-patchable]:: <code>@patchable</code>
+              li::
+                a[href=#directive-doctype]:: <code>@doctype</code>
+              li::
+                a[href=#directive-xml]:: <code>@xml</code>
+              li::
+                a[href=#directive-editable]:: <code>@editable</code>
+              li::
+                a[href=#directive-global]:: <code>@global</code>
+              li::
+                a[href=#directive-allow-elements]:: <code>@allow-elements</code>
+              li::
+                a[href=#directive-allow-attributes]:: <code>@allow-attributes</code>
+              li::
+                a[href=#directive-allow-data-attributes]:: <code>@allow-data-attributes</code>
+              li::
+                a[href=#directive-allow-all]:: <code>@allow-all</code>
+    main#main::
+      #[wip-notice]
+      #[language-intro]
+      #[syntax]
+      #[fragments]
+      #[elements]
+      #[templating]
+      #[selecting-from-dom]
+      #[uri-fragments]
+      #[http-patch]
+      #[directives]
+
+#wip-notice
+aside.warning::
+  p::
+    strong:: This document is a work in progress.
+    
+
+#language-intro
+section::
+  h2:: Language Intro
+  p::
+    <b class=keyword>Longform</b> is an easy to read markup and templating
+    language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>.
+    A longform document can be parsed to a complete document in the output format
+    or as fragments to be used by a application as a source of markup when generating a
+    document, or when manipulating DOM in a browser environment.
+
+  pre::
+    code:: {
+      header::
+        hgroup::
+          h1:: Longform Markup Language
+          p::
+            A markup and templating language for producing
+            <b class=keyword>HTML</b> and <b class=keyword>
+            XML</b> document fragments.
+    }
+  details::
+    summary:: Result
+    pre::
+      samp:: {
+        <header>
+          <hgroup>
+            <h1>Longform Markup Language</h1>
+            <p>
+              A markup and templating language
+              for producing <b class="keyword">
+              HTML</b> and <b class="keyword">XML
+              </b> document fragments.
+            </p>
+          </hgroup>
+        </header>
+      }
+  p::
+    Unlike <b class=keyword>Markdown</b>, which excels in marking up article content
+    but cannot express more recent additions to the HTML spec without falling back to
+    HTML, the Longform syntax adds no constraints on the possible markup
+    of the output format. As a result Longform plays well with custom HTML elements and
+    elements and attributes which might be added to HTML in the future. And in being
+    able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code>
+    it can be used effectively for static content markup for regions of the website beyond
+    the main content.
+  p::
+    Longform also supports directives which alter how a block of Longform or plain
+    HTML / XML is processed. This specification will formalize directives which may be
+    used in a browser environment using a minimal Longform parser.
+  p::
+    For example, in a Longform template the directives <code>@allow-elements</code> and
+    <code>@allow-attributes</code> can be used to allow user defined markup to be used
+    in a template while filtering out any exempt markup.
+    User input markup in the Longform syntax will have filtering rules applied by the 
+    Longform parser, while embedded HTML or XML content will require that an external serializer
+    such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to
+    hook into the parser and apply the rules to the user defined content.
+
+  pre[aria-describedby=template-sanitization-example]::
+    code:: {
+      @template
+      ##card
+      section.card.note-#{position}::
+        header::
+          h3:: #{title}
+
+        @allow-attributes:: lang dir
+        @allow-elements:: details[open name] summary h4 p strong em a[href target]
+        div.card-content::
+          ##{content}
+    }
+
+  aside#template-sanitization-example::
+    p::
+      small::
+        In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
+        and XML entities whereas the <code>##{content}</code> expansion will filter any elements
+        and attributes not explicitly allowed by the directive from the resulting markup. These
+        directives can be used many times through a document allowing user defined markup to have
+        rules appropriate for the context.
+
+  p::
+    Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb
+    when minified and gzipped and supporting most intended features for the browser environment.
+    The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or
+    Marked at 12kb. The parser is also fast, as it can complete its job by building up the 
+    resulting HTML fragment strings line by line instead of with a two step process of constructing
+    and abstract syntax tree and then forming the valid output markup.
+
+#fragments
+section::
+  h2:: Fragments
+
+  aside::
+    p::
+      Longform's primary design goal is to output fragments of HTML in a form that can be
+      rendered by another program into a complete HTML document, and when loaded as DOM in a
+      browser, the fragments can be re-selected and referenced by a Javascript runtime. Since
+      all Longform fragments are static content a Javascript runtime can re-use the
+      existing DOM (or clones of) created from a Longform fragment and avoid hydration or
+      re-rendering techniques that are often used by client side libraries, instead making
+      sure that an equivilent DOM node is located in the correct location within the DOM
+      if the runtime is rendering content around it.
+    p::
+      To achieve this, depending on the fragment kind, a parser will embed HTML ids or data
+      attributes in a fragment and expose valid selectors so the fragments can
+      later be selected from the DOM.
+    p::
+      Aside from the root fragment, all fragments should have a unique Longform identifier
+      assigned to them so they can be referenced within the document or from the parsed
+      content.
+
+  h3:: The root fragment
+  p::
+    The root fragment is an optional fragment that has no Longform identifier. There can be
+    only one root fragment in a Longform document. 
+  p::
+    The root element of the root fragment has no whitespace preceeding it. The fragment
+    has no Longform identifier but the root element can have a HTML identifier defined on
+    it.
+  p::
+    After a root fragment is found in the process of parsing a Longform document, all
+    other fragments which do not have Longform identifiers assigned are ignored when
+    rendering the output markup. The root fragment often would have the
+    <a href="#directive-doctype"><code>@doctype</code></a> or
+    <a href="#directive-xml"><code>@xml</code></a> directive prefixing it to add
+    a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing
+    the output markup.
+
+  pre::
+    code:: {
+      @doctype:: html
+      html::
+        head::
+          title:: Example Root Fragment
+        body::
+          h1:: Example Root Fragment
+    }
+
+  details::
+    summary:: Result
+    pre::
+      samp:: {
+        <!doctype html>
+        <html>
+          <head>
+            <title>Example Root Fragment</title>
+          </head>
+          <body>
+            <h1>Example Root Fragment</h1>
+          </body>
+        </html>
+      }
+
+  h3:: Fragments with embedded identifiers
+  p::
+    Fragments can have their Longform identifier embedded into the output markup as
+    a HTML or XML id. Embedded ids should be unique to both the target document and Longform
+    document. If a Longform fragment references a fragment with an embedded identifier, any
+    other attempts to reference the embedded fragment will be ignored by the Longform
+    parser. Fragments with embeded identifiers will also not be exported to be directly
+    referenced by external software if they have been referenced in the Longform document.
+
+  pre::
+    code:: {
+      #embedded-id
+      section::
+        p:: A fragment that can be referenced by its <a href=#embedded-id>identifier</a>
+    }
+
+  details::
+    summary:: Result
+    pre::
+      samp::
+        code:: {
+          <section id="embedded-id">
+            <p>
+              A fragment that can be referenced by its <a href="#embedded-id">identifier</a>
+            </p>
+          </section>
+        }
+  
+  h3:: Bare fragments
+  p::
+    Bare fragments have ids that can be referenced many times within the same Longform
+    document and are always outputted to be used by external software. The given id is
+    written to the output markup as a data attribute instead of an id.
+  pre::
+    code:: {
+      ##alert-something-went-wrong
+      dialog[open].error::
+        p::
+          strong:: Something went wrong!
+        form[method=dialog]::
+          button:: Close
+
+    }
+  details::
+    summary:: Result
+    pre::
+      samp::
+        code:: {
+          <dialog data-lf="alert-something-went-wrong" open class="error">
+            <strong>Something went wrong!</strong>
+            <form method="dialog">
+              <button>Close</botton>
+            </form>
+          </dialog>
+        }
+
+  h3:: Range fragments
+  p::
+    Range fragments can have more than one topmost element which are outputted as siblings.
+    All top-most elements of the range fragment would have the same data attribute.
+
+  pre::
+    code:: {
+      #head-details [
+        title:: The range fragment
+        meta::
+          [name=description]
+          [content=Demonstraiting the range fragment]
+      ]
+    }
+
+  details::
+    summary:: Result
+    pre::
+      samp::
+        code:: {
+          <title data-lf="head-details">A range of fragments</title>
+          <meta data-lf="head-details" name="description" content="Demonstraiting the range fragment" />
+        }
+
+#elements
+section::
+  h2:: Declaring elements
+
+  h3:: Element tags
+  p::
+    A sole element tag can be outputted using the element name followed
+    by two semicolons <code>::</code>.
+
+  pre::
+    code:: {
+      div::
+    }
+
+  h3:: Element attributes
+  p::
+    Element attributes are declared after the tag and are wrapped in 
+    square brackets <code>[]</code>.
+
+  pre::
+    code:: {
+      div[data-foo=bar][aria-describedby=#baz]::
+    }
+
+  p::
+    Alternatively attributes can follow directly after the element tag
+    with 1 level of indentation.
+  pre::
+    code:: {
+      div::
+        [data-foo=bar]
+        [aria-describedby=#baz]
+    }
+
+  p::
+    If an element is declared multiple times the content is concatinated
+    into a single value. This behaviour does not apply to the element's id
+    if it is defined using the attribute syntax. And classes will be
+    concatinated with a space separating them.
+  pre::
+    code:: {
+      meta::
+        [name=description]
+        [content=Lorem ipsum dolor sit amet, consectetur adipiscing elit.]
+        [content=Quisque a sem et nisl mollis porttitor et sit amet neque.]
+        [content=Maecenas suscipit nulla ac suscipit imperdiet. Quisque]
+        [content=odio nisi, semper non dui quis, feugiat faucibus ipsum.]
+    }
+
+    
+  h3:: Element output ids
+  p::
+    The elements output markup id can be declared on the line before the
+    tag at the same indentation level with the hash <code>#</code> symbol
+    pre-fixing the id.
+  pre::
+    code:: {
+      #element-id
+      div::
+    }
+
+  p::
+    Alternatively the id can follow the tag name, before the closing semicolons.
+    Again with a hash prefixing it. If the id had
+  pre::
+    code:: {
+      div#element-id::
+    }
+
+  p::
+    And finally the id can be declared using the attribute syntax.
+  pre::
+    code:: {
+      div[id=element-id]::
+      <!-- or -->
+      div::
+        [id=element-id]
+    }
+
+  p::
+    If an element has an id declared for it twice only the first declaration is used.
+  
+
+  h3:: Element classes
+  p::
+    Classes can be defined following the element's tag declaration with a
+    period <code>.</code> prefixing each tag.
+  pre::
+    code:: {
+      div#element-id.class-1.class-2.class-3::
+    }
+
+  p::
+    Alternatively classes can be defined using the attribute syntax
+    on the lines following the tag definition.
+  pre::
+    code:: {
+      div#element-id::
+        [class=class-1]
+        [class=class-2 class-3]
+    }
+
+  h3:: Element text and native markup content.
+  p::
+    Elements can have text and native markup following the tag declaration
+    with a space between the text and the double colons of the element definition.
+  pre::
+    code:: {
+      div:: Text content with <em>some</em> native markup.
+    }
+
+  p::
+    Alternatively, the text and native markup can follow the tag declaration
+    with one extra indentation level.
+  pre::
+    code:: {
+      div::
+        Text content with <em>some</em> native markup.
+    }
+
+  p::
+    <i>In conclusion</i> the Longform syntax is versatile, allowing elements to be declared
+    without two much verbosity, unless it is required. Where Longform is best is
+    in layout and heirachical markup. Blocks of text with inline HTML formatting
+    often will look nicer when written in HTML.
+
+  h3:: Preformatted text
+
+  pre::
+    code:: {
+      div::
+        #element-id
+        button::
+          [class=class1 class2]
+          [class=class3]
+          [type=button]
+
+          <strong>Text content</strong>
+
+        button#element-id.class1.class2.class3[type=button]:: <strong>Text content</strong>
+    }
+
+
+  h3:: Whitespace
+  p::
+    Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two
+    spaces out from an element will be outputted as the child of that element.
+
+  p::
+    Some exceptions for this are when native markup of the output language and text
+    are being processed. Or when in a preformatted block.
+
+  h4:: Comments
+  p::
+    Comments can be written outside of a fragment using <code>--</code> two hyphens.
+    Within a fragment comments in the output markup language's syntax can be used
+    but they will be written to the output alongside all other text in the native
+    output markup.
+    
+#templating
+section::
+  h2:: Templating
+  p::
+    Longform templates only allow key-value pairs inputed with the values being strings.
+    The template is intended to be passed over to the client where the template might
+    be rendered using client side state. It is assumed that the client has its
+    own means to perform conditional statements and iterate, and is optimized to do so,
+    so those functionalities are left to the scripting language to keep the templating logic lean.
+
+#http-patch
+section::
+  h2:: HTTP Patch support
+  p::
+    Longform can 
+
+#media-type
+section::
+  h2:: Media-type
+  p::
+    
+
+#directives
+section::
+  h2:: Directives
+
+  dl::
+    dt#directive-url::
+      b:: <code>@url</code>
+    dd::
+      p::
+        Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code>
+        using the <code>Accept</code> header <b>text/longform</b> should produce the same
+        document unless it has since been modified.
+
+      pre::
+        code:: {
+          @url:: https://example.com/blog/article-1
+        }
+    dt#directive-patchable::
+      b:: <code>@patchable</code>
+    dd::
+      p::
+        Asserts to the client that the document can be patched using a HTTP Patch request
+        and the <code>Content-Type</code> header <b>text/longform</b>.
+        The <code>@patchable</code> directive should be ignored unless the <code>@url</code>
+        directive is used.
+      pre::
+        code:: {
+          @url:: http://example.com/blog/longform-1
+          @patchable
+        }
+    dt#directive-doctype::
+      b:: <code>@doctype</code>
+    dd::
+      p::
+        Inserts a doctype declaration before a fragment starts.
+      pre::
+        code:: {
+          @doctype:: html
+          html[lang=en]::
+            head::
+              ...
+            body::
+              ...
+        }
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <!doctype html>
+            <html lang="en">
+              <head>...</head>
+              <body>...</body>
+            </html>
+          }
+    dt#directive-xml::
+      b:: <code>@xml</code>
+    dd::
+      p::
+        Inserts an XML declaration before a fragment starts.
+      pre::
+        code:: {
+          @xml:: version="1.0" encoding="UTF-8"
+          html::
+            [xmlns=http://www.w3.org/HTML/1998/html4]
+            [xmlns:xdc=http://www.xml.com/books]
+
+            body::
+              ...
+        }
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <?xml version="1.0" encoding="UTF-8"?>
+            <html
+              xmlns="http://www.w3.org/HTML/1998/html4"
+              xmlns:xdc="http://www.xml.com/books"
+            >
+              <body>
+                ...
+              </body>
+            </html>
+          }
+    dt#directive-editable::
+      b:: <code>@editable</code>
+    dd::
+      p::
+        Marks the children of an element as editable in a patch request.
+        The element cannot be within a template and must have a Longform
+        id set on it.
+      pre::
+        code:: {
+          @editable
+          #edit-me
+          div::
+            This content is editable.
+        }
+    dt#directive-global::
+      b:: <code>@global</code>
+    dd::
+      p::
+        Applies directive rules to an entire Longform document. Directives
+        applied before or within a fragment will typically override globally
+        set rules.
+      pre::
+        code:: {
+          @url:: https://example.com/pages/article-1
+          @patchable
+          @global::
+            @allowed-elements:: h4 p strong em b i small hr br
+        }
+    dt#directive-allow-elements::
+      b:: <code>@allow-elements</code>
+    dd::
+      p::
+        In a template this directive instructs the parser what elements
+        can be rendered when applying non-escaped variable expansion within
+        its scope. If used in a patchable document, client side editors should
+        limit what elements can be edited in the editable element. The
+        directive's rules should also be used to sanitize or reject input when merging
+        edits from a HTTP Patch request into the document on the server.
+      p::
+        Attributes can be allowed on specific elements by listing them in
+        square brackets directly after the element in the directive's arguments.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all elements should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-elements:: a[href target] p strong em
+          div::
+            Edit me!
+        }
+    dt#directive-allow-attributes::
+      b:: <code>@allow-attributes</code>
+    dd::
+      p::
+        In a template this directive instructs the parser what attributes
+        can be rendered when applying non-escaped variable expansion
+        within its scope. If used in a patchable document client side editors
+        can limit what attributes can be added to the markup. The directive's
+        rules should be used to sanitize or reject input when
+        merging edits from a HTTP Patch request into the document on the server.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all attributes should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-attributes:: id name class
+          @allow-elements:: a[href target] p strong em form label[for] input button[submit]
+          div::
+            Edit me...
+        }
+    dt#directive-allow-data-attributes::
+      b:: <code>@allow-data-attributes</code>
+    dd::
+      p::
+        In a template this directive instructs the parser to allow rendering of
+        data-attributes when applying non-escaped variable expansion within its scope.
+        If used in a patchable document client side editors can allow data-attributes
+        to be added to the markup.
+      p::
+        If this or the <code>@allow-all</code>
+        directives are not used all data-attributes should be filtered or rejected
+        when editing or applying variable expansion.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-data-attributes
+          @allow-attributes:: id name class
+          @allow-elements:: a[href target] p strong em form label[for] input button[submit]
+          div::
+            Edit me...
+        }
+
+    dt#directive-allow-all::
+      b:: <code>@allow-all</code>
+    dd::
+      p::
+        This directive instructs the parser to allow all elements, attributes
+        and data-attributes when performing non-escaped variable expansion or
+        when editing a patchable document.
+      p::
+        This directive can be applied in a <code>@global</code> directive block
+        to set the default rules for a document. The directive applied closest
+        to a template variable expansion or editable element takes precedence.
+      pre::
+        code:: {
+          @editable
+          @allow-all
+          body::
+            Edit me...
+        }
+      
+
+    
+
+
