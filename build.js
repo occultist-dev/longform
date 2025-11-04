@@ -30,6 +30,7 @@ await esbuild.build({
 });
 
 spawnSync('tsc', [
+  './lib/types.ts',
   './lib/longform.ts',
   '--outfile', './dist/longform.d.ts',
   '--declaration',

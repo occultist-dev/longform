@@ -1,4 +1,5 @@
-import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
+import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, ParsedResult } from "./types.ts";
+export * from './types';
 
 export * from './types';
 
@@ -64,9 +65,9 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
  * in the output format.
  *
  * @param {string} doc - The longform document to parse.
- * @returns {Longform}
+ * @returns {ParsedResult}
  */
-export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): Longform {
+export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): ParsedResult {
   let skipping: boolean = false
     , textIndent: number | null = null
     , verbatimSerialize: boolean = true
@@ -81,7 +82,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
   const claimed: Set<string> = new Set()
     // parsed fragments
     , parsed: Map<string, WorkingFragment> = new Map()
-    , output: Longform = Object.create(null);
+    , output: ParsedResult = Object.create(null);
 
   output.fragments = Object.create(null);
   
@@ -97,7 +98,10 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
       fragment.html += `<${element.tag}`
 
       if (root) {
-        if (fragment.type === 'embed' || fragment.type === 'range') {
+        if (fragment.type === 'root') {
+          fragment.html += ` data-lf-root`;
+        } else if (fragment.type === 'bare' || fragment.type === 'range') {
+          console.log('ELEMENT', element);
           fragment.html += ` data-lf="${element.id}"`;
         }
       }
@@ -478,8 +482,9 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     flatten(fragment)
   }
 
-  if (root.html != null) {
+  if (root?.html != null) {
     output.root = root.html;
+    output.selector = `[data-lf-root]`;
   }
 
   for (let i = 0; i < arr.length; i++) {
@@ -501,7 +506,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     output.fragments[fragment.id] = {
       id: fragment.id,
       selector,
-      type: fragment.type,
+      type: fragment.type as 'embed' | 'bare' | 'range',
       html: fragment.html,
     };
   }

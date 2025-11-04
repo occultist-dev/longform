@@ -1,2 +1,4 @@
 .zed
+.yalc
 node_modules
+yalc.lock

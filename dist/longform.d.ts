@@ -14,7 +14,7 @@ declare module "types" {
         html: string;
         els: WorkingElement[];
     };
-    export type FragmentType = 'root' | 'embed' | 'bare' | 'range' | 'template';
+    export type FragmentType = 'root' | 'embed' | 'bare' | 'range';
     export type FragmentRef = {
         id: string;
         start: number;
@@ -31,24 +31,25 @@ declare module "types" {
     export type Fragment = {
         id: string;
         selector: string;
-        type: FragmentType;
+        type: Exclude<FragmentType, 'root'>;
         html: string;
     };
-    export type Longform = {
+    export type ParsedResult = {
         root: string | null;
         selector: string | null;
         fragments: Record<string, Fragment>;
     };
 }
 declare module "longform" {
-    import type { Longform } from "types";
+    import type { ParsedResult } from "types";
+    export * from "types";
     export * from "types";
     /**
      * Parses a longform document into a object containing the root and fragments
      * in the output format.
      *
      * @param {string} doc - The longform document to parse.
-     * @returns {Longform}
+     * @returns {ParsedResult}
      */
-    export function longform(doc: string, debug?: (...d: unknown[]) => void): Longform;
+    export function longform(doc: string, debug?: (...d: unknown[]) => void): ParsedResult;
 }

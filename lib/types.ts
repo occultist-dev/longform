@@ -26,7 +26,6 @@ export type FragmentType =
   | 'embed'
   | 'bare'
   | 'range'
-  | 'template'
 ;
 
 export type FragmentRef = {
@@ -47,12 +46,13 @@ export type WorkingFragment = {
 export type Fragment = {
   id: string;
   selector: string;
-  type: FragmentType;
+  type: Exclude<FragmentType, 'root'>;
   html: string;
 };
 
-export type Longform = {
+export type ParsedResult = {
   root: string | null;
   selector: string | null;
   fragments: Record<string, Fragment>;
 };
+
