@@ -468,7 +468,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     flatten(fragment)
   }
 
-  if (root.html != null) {
+  if (root?.html != null) {
     output.root = root.html;
   }
 
