@@ -1,6 +1,7 @@
 declare module "types" {
     export type WorkingElement = {
         indent: number;
+        key?: string;
         id?: string;
         tag?: string;
         class?: string;
@@ -42,7 +43,6 @@ declare module "types" {
 }
 declare module "longform" {
     import type { ParsedResult } from "types";
-    export * from "types";
     export * from "types";
     /**
      * Parses a longform document into a object containing the root and fragments

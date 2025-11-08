@@ -1,6 +1,7 @@
 
 export type WorkingElement = {
   indent: number;
+  key?: string;
   id?: string;
   tag?: string;
   class?: string;

@@ -1,5 +1,4 @@
-export * from "./types";
-export * from "./types";
+export * from "./types.ts";
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi, element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi, directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi, attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/, preformattedClose = /[ \t]*}}?[ \t]*/, id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi, idnt1 = /^(\ \ )+/, text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i, paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g, refRe = /#\[([\w\-]+)\]/g, voids = /* @__PURE__ */ new Set([
   "area",
   "base",
@@ -48,14 +47,13 @@ export function longform(doc, debug = () => {
   output.fragments = /* @__PURE__ */ Object.create(null);
   function applyIndent(targetIndent) {
     if (element.tag != null) {
-      const root2 = fragment.html === "";
+      const root2 = fragment.type === "range" ? targetIndent < 2 : fragment.html === "";
       fragment.html += `<${element.tag}`;
       if (root2) {
         if (fragment.type === "root") {
           fragment.html += ` data-lf-root`;
         } else if (fragment.type === "bare" || fragment.type === "range") {
-          console.log("ELEMENT", element);
-          fragment.html += ` data-lf="${element.id}"`;
+          fragment.html += ` data-lf="${fragment.id}"`;
         }
       }
       if (element.id != null) {

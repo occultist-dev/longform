@@ -1,7 +1,6 @@
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, ParsedResult } from "./types.ts";
-export * from './types';
-
-export * from './types';
+// exported for generated d.ts file to include types.
+export * from './types.ts';
 
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi
   , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi
@@ -93,7 +92,10 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
    */
   function applyIndent(targetIndent: number) {
     if (element.tag != null) {
-      const root = fragment.html === '';
+      const root = fragment.type === 'range'
+        ? targetIndent < 2
+        : fragment.html === ''
+      ;
 
       fragment.html += `<${element.tag}`
 
@@ -101,8 +103,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         if (fragment.type === 'root') {
           fragment.html += ` data-lf-root`;
         } else if (fragment.type === 'bare' || fragment.type === 'range') {
-          console.log('ELEMENT', element);
-          fragment.html += ` data-lf="${element.id}"`;
+          fragment.html += ` data-lf="${fragment.id}"`;
         }
       }
 
