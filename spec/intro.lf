@@ -54,9 +54,13 @@
     small {
       font-size: .8rem;
     }
-    aside:not(.warning) {
+    aside:not(.warning):not(.notice) {
       font-family: serif;
       font-style: italic;
+    }
+    aside.notice {
+      border: solid .25rem blue;
+      padding: .25rem 1rem;
     }
     aside.warning {
       border: solid .25rem red;
@@ -97,7 +101,6 @@
         bottom: 2rem;
       }
     }
-
   }}
 ]
 
@@ -128,11 +131,18 @@ html[lang=en]::
               a[href=#elements]:: Elements
           li::
             b::
-              a[href=#http-patch]:: HTTP Patch Support
+              a[href=#mediatype]:: Mediatype
+          li::
+            b::
+              a[href=#server-side-usage]:: Server side usage
+            ul::
+              li::
+                a[href=#pre-processing]:: Pre-processing
+              li::
+                a[href=#http-patch]:: HTTP Patch
           li::
             b::
               a[href=#directives]:: Directives
-
             ul::
               li::
                 a[href=#directive-url]:: <code>@url</code>
@@ -162,8 +172,8 @@ html[lang=en]::
       #[elements]
       #[templating]
       #[selecting-from-dom]
-      #[uri-fragments]
-      #[http-patch]
+      #[mediatype]
+      #[server-side-usage]
       #[directives]
 
 #wip-notice
@@ -575,16 +585,53 @@ section::
     own means to perform conditional statements and iterate, and is optimized to do so,
     so those functionalities are left to the scripting language to keep the templating logic lean.
 
+
+#mediatype
+section::
+  h2:: Mediatype
+  aside.notice::
+    p::
+      The Longform rules described above apply to the <b>text/longform</b> mediatype. This
+      mediatype's feature set is limited to what is required for optimized client side usage
+      of the Longform format. What follows after this section is for Longform pre-processors
+      and patch utilities which are intended to run in a server side context.
+
+
+#server-side-usage
+section::
+  h2:: Server side usage
+  aside.warning::
+    h3:: Security considerations
+    p::
+      There is a security risk here where user edited content might set HTML ids or data
+      attributes conflicting with Longform's own ids and data attributes causing the
+      client side fragments selected from the user's content instead of the source
+      document when using Longform in a Javascript application and rebuilding the Longform
+      output from the DOM. This could happen by implemented HTTP Patch support, or by
+      pre-processing a Longform document on the server.
+    p::
+      Server side Longform pre-processors and utilities will need to implement different
+      parsing approaches to the minimalist Longform parser <b>@longform/longform</b>
+      which is optimized for clientside use and never identifies all HTML identifiers
+      set in the source document and cannot apply filters on user generated content. It
+      is also limited in its sanitization APIs so it can play well with the web standard
+      sanitizers that are not yet implemented by all browsers.
+    p::
+      If developing a Longform pre-processor or patch utility user content should be filtered
+      to have conflicting ids or data attributes stripped that would conflict with Longform's
+      selector output.
+
+  #[pre-processing]
+  #[http-patch]
+
+
+#pre-processing
+section::
+  h3:: Pre-processing
+
 #http-patch
 section::
-  h2:: HTTP Patch support
-  p::
-    Longform can 
-
-#media-type
-section::
-  h2:: Media-type
-  p::
+  h3:: HTTP Patch support
     
 
 #directives
@@ -796,7 +843,13 @@ section::
           body::
             Edit me...
         }
-      
+
+    dt#preprocess::
+      b:: <code>@preprocess</code>
+    dd::
+      p::
+        This directive should be used at the top level of a fragment to instruct
+        a Longform pre-processor to 
 
     
 

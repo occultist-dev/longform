@@ -10,22 +10,7 @@ const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
   , paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g
   , refRe = /#\[([\w\-]+)\]/g
-  , voids = new Set([
-    'area',
-    'base',
-    'br',
-    'col',
-    'embed',
-    'hr',
-    'img',
-    'input',
-    'link',
-    'meta',
-    'param',
-    'source',
-    'track',
-    'wrb',
-  ]);
+  , voids = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wrb']);
 
 let m1: RegExpExecArray | null
   , m2: RegExpExecArray | null;
