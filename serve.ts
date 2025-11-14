@@ -32,6 +32,8 @@ watchFile(mod, async () => {
 console.log('Watching', mod);
 
 const server = createServer(async (_req, res) => {
+  await writeHTML();
+  
   const file = await readFile(resolve(dir, 'index.html'));
   res.writeHead(200, {
     "content-type": 'text/html',

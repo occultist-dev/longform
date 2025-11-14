@@ -1,6 +1,7 @@
 
 export type WorkingElement = {
   indent: number;
+  key?: string;
   id?: string;
   tag?: string;
   class?: string;
@@ -26,7 +27,6 @@ export type FragmentType =
   | 'embed'
   | 'bare'
   | 'range'
-  | 'template'
 ;
 
 export type FragmentRef = {
@@ -46,11 +46,14 @@ export type WorkingFragment = {
 
 export type Fragment = {
   id: string;
-  type: FragmentType;
+  selector: string;
+  type: Exclude<FragmentType, 'root'>;
   html: string;
 };
 
-export type Longform = {
+export type ParsedResult = {
   root: string | null;
+  selector: string | null;
   fragments: Record<string, Fragment>;
 };
+

@@ -1,4 +1,6 @@
-import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, Longform } from "./types.ts";
+import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, ParsedResult } from "./types.ts";
+// exported for generated d.ts file to include types.
+export * from './types.ts';
 
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi
   , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi
@@ -47,9 +49,9 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
  * in the output format.
  *
  * @param {string} doc - The longform document to parse.
- * @returns {Longform}
+ * @returns {ParsedResult}
  */
-export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): Longform {
+export function longform(doc: string, debug: (...d: unknown[]) => void = () => {}): ParsedResult {
   let skipping: boolean = false
     , textIndent: number | null = null
     , verbatimSerialize: boolean = true
@@ -64,7 +66,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
   const claimed: Set<string> = new Set()
     // parsed fragments
     , parsed: Map<string, WorkingFragment> = new Map()
-    , output: Longform = Object.create(null);
+    , output: ParsedResult = Object.create(null);
 
   output.fragments = Object.create(null);
   
@@ -75,7 +77,20 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
    */
   function applyIndent(targetIndent: number) {
     if (element.tag != null) {
+      const root = fragment.type === 'range'
+        ? targetIndent < 2
+        : fragment.html === ''
+      ;
+
       fragment.html += `<${element.tag}`
+
+      if (root) {
+        if (fragment.type === 'root') {
+          fragment.html += ` data-lf-root`;
+        } else if (fragment.type === 'bare' || fragment.type === 'range') {
+          fragment.html += ` data-lf="${fragment.id}"`;
+        }
+      }
 
       if (element.id != null) {
         fragment.html += ' id="' + element.id + '"';
@@ -455,18 +470,29 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 
   if (root?.html != null) {
     output.root = root.html;
+    output.selector = `[data-lf-root]`;
   }
 
   for (let i = 0; i < arr.length; i++) {
+    let selector: string;
     const fragment = arr[i];
 
     if (fragment == null || claimed.has(fragment.id)) {
       continue;
     }
 
+    if (fragment.type === 'embed') {
+      selector = `[id=${fragment.id}]`;
+    } else if (fragment.type === 'bare') {
+      selector = `[data-lf=${fragment.id}]`;
+    } else if (fragment.type === 'range') {
+      selector = `[data-lf=${fragment.id}]`;
+    }
+
     output.fragments[fragment.id] = {
       id: fragment.id,
-      type: fragment.type,
+      selector,
+      type: fragment.type as 'embed' | 'bare' | 'range',
       html: fragment.html,
     };
   }

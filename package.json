@@ -1,10 +1,11 @@
 {
-  "name": "longform",
+  "name": "@longform/longform",
   "type": "module",
   "module": "./lib/longform.ts",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "longform.js",
+  "main": "dist/longform.js",
+  "types": "./dist/longform.d.ts",
   "scripts": {
     "build": "node build.js",
     "test": "node --test lib/longform.test.ts",
@@ -25,6 +26,7 @@
   "dependencies": {
     "@types/markdown-it": "^14.1.2",
     "commonmark": "^0.31.2",
+    "longform": "file:.yalc/longform",
     "markdown-it": "^14.1.0",
     "markdown-it-task-lists": "^2.1.1",
     "marked": "^16.4.1",
