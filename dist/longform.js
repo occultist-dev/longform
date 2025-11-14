@@ -1,6 +1,23 @@
-export * from "./types.ts";
-const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi, element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi, directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi, attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/, preformattedClose = /[ \t]*}}?[ \t]*/, id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi, idnt1 = /^(\ \ )+/, text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i, paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g, refRe = /#\[([\w\-]+)\]/g, voids = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wrb"]);
-let m1, m2;
+const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi, element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi, directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi, attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/, preformattedClose = /[ \t]*}}?[ \t]*/, id1 = /((?:\ \ )+)?#(#)?([\w\-]+)(?: ([\["]))?/gmi, idnt1 = /^(\ \ )+/, text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i, paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g, refRe = /#\[([\w\-]+)\]/g, escapeRe = /([&<>"'#\[\]{}])/g, templateLinesRe = /^(\ \ )?([^\n]*)$/gmi, voids = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wrb"]);
+let m1, m2, m3;
+const entities = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&apos;",
+  "#": "&num;",
+  "[": "&lbrak;",
+  "]": "&rbrak;",
+  "{": "&rbrace;",
+  "}": "&lbrace;"
+};
+function escape(value) {
+  return value.replace(escapeRe, (match) => {
+    var _a;
+    return (_a = entities[match]) != null ? _a : "";
+  });
+}
 function makeElement(indent = 0) {
   return {
     indent,
@@ -19,6 +36,7 @@ function makeFragment(type = "bare") {
   return {
     type,
     html: "",
+    template: false,
     els: [],
     chunks: [],
     refs: []
@@ -30,6 +48,7 @@ export function longform(doc, debug = () => {
   let skipping = false, textIndent = null, verbatimSerialize = true, verbatimIndent = null, verbatimFirst = false, element = makeElement(), chunk = makeChunk(), fragment = makeFragment(), root = null;
   const claimed = /* @__PURE__ */ new Set(), parsed = /* @__PURE__ */ new Map(), output = /* @__PURE__ */ Object.create(null);
   output.fragments = /* @__PURE__ */ Object.create(null);
+  output.templates = /* @__PURE__ */ Object.create(null);
   function applyIndent(targetIndent) {
     if (element.tag != null) {
       const root2 = fragment.type === "range" ? targetIndent < 2 : fragment.html === "";
@@ -70,7 +89,9 @@ export function longform(doc, debug = () => {
       }
       if (targetIndent === 0) {
         debug(0, "<", fragment.type, fragment.id);
-        if (fragment.type === "root") {
+        if (fragment.template) {
+          output.templates[fragment.id] = fragment.html;
+        } else if (fragment.type === "root") {
           root = fragment;
         } else {
           parsed.set(fragment.id, fragment);
@@ -84,6 +105,8 @@ export function longform(doc, debug = () => {
   while (m1 = sniffTestRe.exec(doc)) {
     if (m1[1] === "--") {
       continue;
+    } else if (fragment.template) {
+      fragment.html += m1[0];
     }
     if (verbatimIndent != null) {
       idnt1.lastIndex = 0;
@@ -111,7 +134,7 @@ export function longform(doc, debug = () => {
           fragment.html += "\n";
         }
         if (verbatimSerialize) {
-          fragment.html += line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+          fragment.html += escape(line);
         } else {
           fragment.html += line;
         }
@@ -135,8 +158,10 @@ export function longform(doc, debug = () => {
           debug(indent, "id", m2[2], m2[3], m2[4]);
           fragment.id = m2[3];
           if (indent === 0) {
-            if (m2[4] != null) {
+            if (m2[4] == "[") {
               fragment.type = "range";
+            } else if (m2[4] === '"') {
+              fragment.type = "text";
             } else if (m2[2] != null) {
               fragment.type = "bare";
             } else {
@@ -246,6 +271,25 @@ export function longform(doc, debug = () => {
               fragment.html += `<?xml ${(_k = m2[3]) != null ? _k : 'version="1.0" encoding="UTF-8"'}?>`;
               break;
             }
+            case "template": {
+              let indented = false;
+              fragment.template = indent === 0;
+              templateLinesRe.lastIndex = sniffTestRe.lastIndex;
+              while (m2 = templateLinesRe.exec(doc)) {
+                if (m2[1] == null && !indented) {
+                  m3 = id1.exec(m2[0]);
+                  fragment.id = m3[3];
+                  fragment.html += m2[0];
+                } else if (m2[1] == null && indented) {
+                  sniffTestRe.lastIndex = templateLinesRe.lastIndex - 1;
+                  applyIndent(0);
+                  break;
+                } else {
+                  fragment.html += "\n" + m2[0];
+                }
+                indented = true;
+              }
+            }
           }
           break;
         }
@@ -260,6 +304,8 @@ export function longform(doc, debug = () => {
         debug(indent, "t", m2[2]);
         if (element.tag != null) {
           applyIndent(indent);
+          fragment.html += tx;
+        } else if (fragment.type === "text" && fragment.html === "") {
           fragment.html += tx;
         } else {
           fragment.html += " " + tx;
@@ -334,5 +380,22 @@ export function longform(doc, debug = () => {
     };
   }
   return output;
+}
+const templateRe = /(?:#{([\w][\w\-_]*)})|(?:#\[([\w][\w\-_]+)\])/g;
+export function processTemplate(fragment, args, parsed) {
+  var _a, _b;
+  const template = parsed.templates[fragment];
+  if (template == null) {
+    return null;
+  }
+  const lf = template.replace(templateRe, (_match, param, ref) => {
+    if (ref != null) {
+      const fragment2 = parsed.fragments[ref];
+      if (fragment2 == null) return "";
+      return fragment2.html;
+    }
+    return args[param] != null ? escape(args[param].toString()) : "";
+  });
+  return (_b = (_a = longform(lf).fragments[fragment]) == null ? void 0 : _a.html) != null ? _b : null;
 }
 //# sourceMappingURL=longform.js.map

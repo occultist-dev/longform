@@ -15,7 +15,8 @@ declare module "types" {
         html: string;
         els: WorkingElement[];
     };
-    export type FragmentType = 'root' | 'embed' | 'bare' | 'range';
+    export type WorkingFragmentType = 'root' | 'embed' | 'bare' | 'range' | 'text' | 'template';
+    export type FragmentType = 'embed' | 'bare' | 'range' | 'text';
     export type FragmentRef = {
         id: string;
         start: number;
@@ -23,7 +24,8 @@ declare module "types" {
     };
     export type WorkingFragment = {
         id?: string;
-        type: FragmentType;
+        template: boolean;
+        type: WorkingFragmentType;
         html: string;
         refs: FragmentRef[];
         chunks: WorkingChunk[];
@@ -32,18 +34,19 @@ declare module "types" {
     export type Fragment = {
         id: string;
         selector: string;
-        type: Exclude<FragmentType, 'root'>;
+        type: FragmentType;
         html: string;
     };
     export type ParsedResult = {
         root: string | null;
         selector: string | null;
         fragments: Record<string, Fragment>;
+        templates: Record<string, string>;
     };
 }
 declare module "longform" {
-    import type { ParsedResult } from "types";
-    export * from "types";
+    import type { FragmentType, ParsedResult, Fragment } from "types";
+    export type { FragmentType, Fragment, ParsedResult };
     /**
      * Parses a longform document into a object containing the root and fragments
      * in the output format.
@@ -52,4 +55,13 @@ declare module "longform" {
      * @returns {ParsedResult}
      */
     export function longform(doc: string, debug?: (...d: unknown[]) => void): ParsedResult;
+    /**
+     * Processes a client side Longform template to HTML fragment string.
+     *
+     * @param fragment - The fragment identifier.
+     * @param args     - A record of template arguments.
+     * @param parsed   - The parsed result of the Longform server side process re-assembled.
+     * @returns The processed template.
+     */
+    export function processTemplate(fragment: string, args: Record<string, string | number>, parsed: ParsedResult): string | null;
 }

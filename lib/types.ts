@@ -22,8 +22,16 @@ export type WorkingChunk = {
   els: WorkingElement[];
 };
 
-export type FragmentType =
+export type WorkingFragmentType =
   | 'root'
+  | 'embed'
+  | 'bare'
+  | 'range'
+  | 'text'
+  | 'template'
+;
+
+export type FragmentType =
   | 'embed'
   | 'bare'
   | 'range'
@@ -38,7 +46,8 @@ export type FragmentRef = {
 
 export type WorkingFragment = {
   id?: string;
-  type: FragmentType;
+  template: boolean;
+  type: WorkingFragmentType;
   html: string;
   refs: FragmentRef[];
   chunks: WorkingChunk[];
@@ -48,7 +57,7 @@ export type WorkingFragment = {
 export type Fragment = {
   id: string;
   selector: string;
-  type: Exclude<FragmentType, 'root'>;
+  type: FragmentType;
   html: string;
 };
 
@@ -56,5 +65,6 @@ export type ParsedResult = {
   root: string | null;
   selector: string | null;
   fragments: Record<string, Fragment>;
+  templates: Record<string, string>;
 };
 

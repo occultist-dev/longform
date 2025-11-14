@@ -1,9 +1,9 @@
-import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, ParsedResult } from "./types.ts";
+import type { ChunkType, FragmentType, ParsedResult, WorkingChunk, WorkingElement, WorkingFragment, Fragment } from "./types.ts";
 
 export type {
-  ChunkType,
   FragmentType,
-  ParsedResult,
+  Fragment,
+  ParsedResult
 };
 
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi
@@ -16,18 +16,31 @@ const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
   , paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g
   , refRe = /#\[([\w\-]+)\]/g
+  , escapeRe = /([&<>"'#\[\]{}])/g
+  , templateLinesRe = /^(\ \ )?([^\n]*)$/gmi
   , voids = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wrb']);
 
 let m1: RegExpExecArray | null
-  , m2: RegExpExecArray | null;
+  , m2: RegExpExecArray | null
+  , m3: RegExpExecArray | null;
 
+const entities = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&apos;',
+  '#': '&num;',
+  '[': '&lbrak;',
+  ']': '&rbrak;',
+  '{': '&rbrace;',
+  '}': '&lbrace;',
+};
 
 function escape(value: string): string {
-  return value.replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+  return value.replace(escapeRe, (match) => {
+    return entities[match] ?? '';
+  });
 }
 
 function makeElement(indent: number = 0): WorkingElement {
@@ -50,6 +63,7 @@ function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
   return {
     type,
     html: '',
+    template: false,
     els: [],
     chunks: [],
     refs: [],
@@ -81,6 +95,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     , output: ParsedResult = Object.create(null);
 
   output.fragments = Object.create(null);
+  output.templates = Object.create(null);
   
   
   /**
@@ -149,7 +164,9 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 
       if (targetIndent === 0) {
         debug(0, '<', fragment.type, fragment.id);
-        if (fragment.type === 'root') {
+        if (fragment.template) {
+          output.templates[fragment.id] = fragment.html;
+        } else if (fragment.type === 'root') {
           root = fragment;
         } else {
           parsed.set(fragment.id, fragment);
@@ -165,6 +182,8 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
   while ((m1 = sniffTestRe.exec(doc))) {
     if (m1[1] === '--') {
       continue;
+    } else if (fragment.template) {
+      fragment.html += m1[0];
     }
 
     // If this is a script tag or preformatted block
@@ -233,9 +252,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
             textIndent = null;
           }
 
-          console.log(m1)
           debug(indent, 'id', m2[2], m2[3], m2[4]);
-          console.log('M2[4]', `"${m2[4]}`)
 
           fragment.id = m2[3];
 
@@ -387,6 +404,27 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
               fragment.html += `<?xml ${m2[3] ?? 'version="1.0" encoding="UTF-8"'}?>`;
               break;
             }
+            case 'template': {
+              let indented = false;
+              fragment.template = indent === 0;
+
+              templateLinesRe.lastIndex = sniffTestRe.lastIndex;
+              while ((m2 = templateLinesRe.exec(doc))) {
+                if (m2[1] == null && !indented) {
+                  m3 = id1.exec(m2[0]);
+
+                  fragment.id = m3[3];
+                  fragment.html += m2[0];
+                } else if (m2[1] == null && indented) {
+                  sniffTestRe.lastIndex = templateLinesRe.lastIndex - 1;
+                  applyIndent(0)
+                  break;
+                } else {
+                  fragment.html += '\n' + m2[0];
+                }
+                indented = true;
+              }
+            }
           }
 
           break;
@@ -402,12 +440,13 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         const indent = m2[1].length / 2;
         const tx = m2[2].trim();
 
-
         debug(indent, 't', m2[2]);
 
         if (element.tag != null) {
           applyIndent(indent);
 
+          fragment.html += tx;
+        } else if (fragment.type === 'text' && fragment.html === '') {
           fragment.html += tx;
         } else {
           fragment.html += ' ' + tx;
@@ -512,20 +551,34 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
 }
 
 
-const templateRe = /#(#)?{([\w][\w-_]*)}/g
+const templateRe = /(?:#{([\w][\w\-_]*)})|(?:#\[([\w][\w\-_]+)\])/g;
 
-export function template(fragment: string, fragments: Record<string, string>, args: Record<string, string | number> = {}) {
-  const lf = fragment.replace(templateRe, (_match, embed, param) => {
-    if (embed) {
-      const fragment = fragments[param];
+/**
+ * Processes a client side Longform template to HTML fragment string.
+ *
+ * @param fragment - The fragment identifier.
+ * @param args     - A record of template arguments.
+ * @param parsed   - The parsed result of the Longform server side process re-assembled.
+ * @returns The processed template.
+ */
+export function processTemplate(fragment: string, args: Record<string, string | number>, parsed: ParsedResult): string | null {
+  const template = parsed.templates[fragment];
+  
+  if (template == null) {
+    return null;
+  }
+  
+  const lf = template.replace(templateRe, (_match, param, ref) => {
+    if (ref != null) {
+      const fragment = parsed.fragments[ref];
 
       if (fragment == null) return '';
 
-      return fragment;
+      return fragment.html;
     }
     
     return args[param] != null ? escape(args[param].toString()) : '';
   });
 
-  return longform(lf);
+  return longform(lf).fragments[fragment]?.html ?? null;
 }

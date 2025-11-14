@@ -1,10 +1,11 @@
-import { longform, template } from './longform.ts';
+import { longform, processTemplate } from './longform.ts';
+import type { ParsedResult } from './types.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vnu from 'vnu-jar';
 import { execFile } from "node:child_process";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { parse, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
@@ -263,15 +264,24 @@ test('It embeds referenced fragments', { skip: true }, async () => {
 });
 
 const lf8 = `
+@root
+html::
+  This is ignored
+
 @template
 #label "
-  This is my #{position} label text
+  This is my #{position} label text #[ref]
+  with a new line in it
+"
+
+##ref
+p::
+  This is referenced.
 "
 `;
 
-test('It renders plan text fragments', { only: true }, () => {
-  const res = template(lf8, {}, { position: 4 });
-
-  console.log(res);
+test('It renders plan text fragments', { skip: true }, () => {
+  const parsed = longform(lf8);
+  const res = processTemplate('label', { position: 4 }, parsed);
 })
 
