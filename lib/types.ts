@@ -27,6 +27,7 @@ export type FragmentType =
   | 'embed'
   | 'bare'
   | 'range'
+  | 'text'
 ;
 
 export type FragmentRef = {

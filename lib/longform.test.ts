@@ -1,4 +1,4 @@
-import { longform } from './longform.ts';
+import { longform, template } from './longform.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vnu from 'vnu-jar';
@@ -262,7 +262,16 @@ test('It embeds referenced fragments', { skip: true }, async () => {
   const res = longform(lf7);
 });
 
+const lf8 = `
+@template
+#label "
+  This is my #{position} label text
+"
+`;
 
+test('It renders plan text fragments', { only: true }, () => {
+  const res = template(lf8, {}, { position: 4 });
 
-
+  console.log(res);
+})
 

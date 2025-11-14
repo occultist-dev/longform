@@ -1,13 +1,17 @@
 import type { WorkingElement, WorkingChunk, ChunkType, WorkingFragment, FragmentType, ParsedResult } from "./types.ts";
-// exported for generated d.ts file to include types.
-export * from './types.ts';
 
-const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +(\[).*)|(\ \ .*))$/gmi
+export type {
+  ChunkType,
+  FragmentType,
+  ParsedResult,
+};
+
+const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi
   , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi
   , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi
   , attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/
   , preformattedClose = /[ \t]*}}?[ \t]*/
-  , id1 = /((?:\ \ )+)?#(#)?([\w\-]+)( \[)?/gmi
+  , id1 = /((?:\ \ )+)?#(#)?([\w\-]+)(?: ([\["]))?/gmi
   , idnt1 = /^(\ \ )+/
   , text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i
   , paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g
@@ -17,6 +21,14 @@ const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#
 let m1: RegExpExecArray | null
   , m2: RegExpExecArray | null;
 
+
+function escape(value: string): string {
+  return value.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+}
 
 function makeElement(indent: number = 0): WorkingElement {
   return {
@@ -194,12 +206,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         }
         
         if (verbatimSerialize) {
-          fragment.html += line
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+          fragment.html += escape(line);
         } else {
           fragment.html += line;
         }
@@ -226,13 +233,17 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
             textIndent = null;
           }
 
+          console.log(m1)
           debug(indent, 'id', m2[2], m2[3], m2[4]);
+          console.log('M2[4]', `"${m2[4]}`)
 
           fragment.id = m2[3];
 
           if (indent === 0) {
-            if (m2[4] != null) {
+            if (m2[4] == '[') {
               fragment.type = 'range';
+            } else if (m2[4] === '"') {
+              fragment.type = 'text';
             } else if (m2[2] != null) {
               fragment.type = 'bare';
             } else {
@@ -498,4 +509,23 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
   }
 
   return output;
+}
+
+
+const templateRe = /#(#)?{([\w][\w-_]*)}/g
+
+export function template(fragment: string, fragments: Record<string, string>, args: Record<string, string | number> = {}) {
+  const lf = fragment.replace(templateRe, (_match, embed, param) => {
+    if (embed) {
+      const fragment = fragments[param];
+
+      if (fragment == null) return '';
+
+      return fragment;
+    }
+    
+    return args[param] != null ? escape(args[param].toString()) : '';
+  });
+
+  return longform(lf);
 }
