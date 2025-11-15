@@ -58,10 +58,10 @@ declare module "longform" {
     /**
      * Processes a client side Longform template to HTML fragment string.
      *
-     * @param fragment - The fragment identifier.
-     * @param args     - A record of template arguments.
-     * @param parsed   - The parsed result of the Longform server side process re-assembled.
+     * @param fragment    - The fragment identifier.
+     * @param args        - A record of template arguments.
+     * @param getFragment - A function which returns an already processed fragment's HTML string.
      * @returns The processed template.
      */
-    export function processTemplate(fragment: string, args: Record<string, string | number>, parsed: ParsedResult): string | null;
+    export function processTemplate(template: string, args: Record<string, string | number>, getFragment: (fragment: string) => string | undefined): string | undefined;
 }

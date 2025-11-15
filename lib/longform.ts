@@ -411,6 +411,7 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
               templateLinesRe.lastIndex = sniffTestRe.lastIndex;
               while ((m2 = templateLinesRe.exec(doc))) {
                 if (m2[1] == null && !indented) {
+                  id1.lastIndex = 0;
                   m3 = id1.exec(m2[0]);
 
                   fragment.id = m3[3];
@@ -556,29 +557,27 @@ const templateRe = /(?:#{([\w][\w\-_]*)})|(?:#\[([\w][\w\-_]+)\])/g;
 /**
  * Processes a client side Longform template to HTML fragment string.
  *
- * @param fragment - The fragment identifier.
- * @param args     - A record of template arguments.
- * @param parsed   - The parsed result of the Longform server side process re-assembled.
+ * @param fragment    - The fragment identifier.
+ * @param args        - A record of template arguments.
+ * @param getFragment - A function which returns an already processed fragment's HTML string.
  * @returns The processed template.
  */
-export function processTemplate(fragment: string, args: Record<string, string | number>, parsed: ParsedResult): string | null {
-  const template = parsed.templates[fragment];
-  
-  if (template == null) {
-    return null;
-  }
-  
+export function processTemplate(
+  template: string,
+  args: Record<string, string | number>,
+  getFragment: (fragment: string) => string | undefined,
+): string | undefined {
   const lf = template.replace(templateRe, (_match, param, ref) => {
     if (ref != null) {
-      const fragment = parsed.fragments[ref];
+      const fragment = getFragment(ref);
 
       if (fragment == null) return '';
 
-      return fragment.html;
+      return fragment;
     }
     
     return args[param] != null ? escape(args[param].toString()) : '';
   });
 
-  return longform(lf).fragments[fragment]?.html ?? null;
+  return Object.values(longform(lf).fragments)[0]?.html ?? null;
 }

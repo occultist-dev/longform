@@ -277,6 +277,7 @@ export function longform(doc, debug = () => {
               templateLinesRe.lastIndex = sniffTestRe.lastIndex;
               while (m2 = templateLinesRe.exec(doc)) {
                 if (m2[1] == null && !indented) {
+                  id1.lastIndex = 0;
                   m3 = id1.exec(m2[0]);
                   fragment.id = m3[3];
                   fragment.html += m2[0];
@@ -382,20 +383,16 @@ export function longform(doc, debug = () => {
   return output;
 }
 const templateRe = /(?:#{([\w][\w\-_]*)})|(?:#\[([\w][\w\-_]+)\])/g;
-export function processTemplate(fragment, args, parsed) {
+export function processTemplate(template, args, getFragment) {
   var _a, _b;
-  const template = parsed.templates[fragment];
-  if (template == null) {
-    return null;
-  }
   const lf = template.replace(templateRe, (_match, param, ref) => {
     if (ref != null) {
-      const fragment2 = parsed.fragments[ref];
-      if (fragment2 == null) return "";
-      return fragment2.html;
+      const fragment = getFragment(ref);
+      if (fragment == null) return "";
+      return fragment;
     }
     return args[param] != null ? escape(args[param].toString()) : "";
   });
-  return (_b = (_a = longform(lf).fragments[fragment]) == null ? void 0 : _a.html) != null ? _b : null;
+  return (_b = (_a = Object.values(longform(lf).fragments)[0]) == null ? void 0 : _a.html) != null ? _b : null;
 }
 //# sourceMappingURL=longform.js.map
