@@ -180,8 +180,9 @@ html[lang=en]::
 aside.warning::
   p::
     strong::
-      This document and the parser that creates it is a work in progress.
-
+      This document and the parser that creates it are works in progress.
+      View the <a href="https://github.com/occultist-dev/longform/blob/main/spec/intro.lf">Longform source file</a>
+      to get a feel for the language.
     
 
 #language-intro

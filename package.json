@@ -1,11 +1,28 @@
 {
   "name": "@longform/longform",
-  "type": "module",
-  "module": "./lib/longform.ts",
+  "description": "A markup and templating language for creating HTML fragments and full documents.",
   "version": "0.0.1",
-  "description": "",
   "main": "dist/longform.js",
-  "types": "./dist/longform.d.ts",
+  "types": "dist/longform.d.ts",
+  "homepage": "https://github.com/occultist-dev/longform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/occultist-dev/longform"
+  },
+  "type": "module",
+  "module": "lib/longform.ts",
+  "maintainers": [
+    {
+      "name": "Matthew Quinn",
+      "url": "https://matthewquinn.me"
+    }
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/occultist-dev/longform/blob/main/LICENSE"
+    }
+  ],
   "scripts": {
     "build": "node build.js",
     "test": "node --test lib/longform.test.ts",
