@@ -3,7 +3,25 @@ import { spawnSync } from 'node:child_process';
 import { createGzip } from 'node:zlib';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { stat, mkdir, readFile, writeFile } from 'node:fs/promises';
 
+
+const dir = dirname(fileURLToPath(import.meta.url));
+const spec = resolve(dir, 'spec/intro.lf');
+const mod = resolve(dir, 'lib/longform.ts');
+const docs = resolve(dir, 'docs');
+
+async function writeHTML() {
+  const { longform } = await import(pathToFileURL(mod));
+  const doc = await readFile(spec, 'utf-8');
+  const output = longform(doc);
+
+  await writeFile(resolve(dir, 'docs/index.html'), output.root);
+
+  console.log('Updated');
+}
 
 async function gzip(input, output) {
   const gzip = createGzip();
@@ -13,6 +31,11 @@ async function gzip(input, output) {
   await pipeline(source, gzip, destination);
 }
 
+try {
+  await stat(docs);
+} catch {
+  await mkdir(docs);
+}
 
 await esbuild.build({
   entryPoints: ['lib/longform.ts'],
@@ -39,3 +62,4 @@ spawnSync('tsc', [
 
 await gzip('./dist/longform.js', './dist/longform.js.gz');
 await gzip('./dist/longform.min.js', './dist/longform.min.js.gz');
+await writeHTML();

@@ -1,20 +1,27 @@
 import { watchFile } from 'fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const spec = resolve(dir, 'spec/intro.lf');
 const mod = resolve(dir, 'lib/longform.ts');
+const docs = resolve(dir, 'docs');
+
+try {
+  await stat(docs);
+} catch {
+  await mkdir(docs);
+}
 
 async function writeHTML() {
-  const { longform } = await import(pathToFileURL(mod));
+  const { longform } = await import(pathToFileURL(mod).toString());
   const doc = await readFile(spec, 'utf-8');
   const output = longform(doc);
 
-  await writeFile(resolve(dir, 'index.html'), output.root);
+  await writeFile(resolve(dir, 'docs/index.html'), output.root);
 
   console.log('Updated');
 }
@@ -34,7 +41,7 @@ console.log('Watching', mod);
 const server = createServer(async (_req, res) => {
   await writeHTML();
   
-  const file = await readFile(resolve(dir, 'index.html'));
+  const file = await readFile(resolve(dir, 'docs/index.html'));
   res.writeHead(200, {
     "content-type": 'text/html',
   });
