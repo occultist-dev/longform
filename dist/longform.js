@@ -15,7 +15,7 @@ const entities = {
 function escape(value) {
   return value.replace(escapeRe, (match) => {
     var _a;
-    return (_a = entities[match]) != null ? _a : "";
+    return (_a = entities[match]) != null ? _a : match;
   });
 }
 function makeElement(indent = 0) {

@@ -39,7 +39,7 @@ const entities = {
 
 function escape(value: string): string {
   return value.replace(escapeRe, (match) => {
-    return entities[match] ?? '';
+    return entities[match] ?? match;
   });
 }
 
