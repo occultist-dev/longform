@@ -14,7 +14,7 @@ You can view more on what language features are currently supported in the Githu
 milestones.
 
 
-Read more about the Longform language in the Longform Markup Language document.
+Read more about the Longform language in the <a href="https://occultist-dev.github.io/longform">Longform Markup Language document</a>.
 
 
 ## Install
