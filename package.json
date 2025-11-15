@@ -1,6 +1,5 @@
 {
   "name": "@longform/longform",
-  "private": "false",
   "description": "A markup and templating language for creating HTML fragments and full documents.",
   "author": "Matthew Quinn",
   "homepage": "https://github.com/occultist-dev/longform",
