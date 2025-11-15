@@ -1,11 +1,9 @@
 import { longform } from "./lib/longform.ts";
 import { marked } from 'marked';
 import * as commonmark from 'commonmark';
-import markdownit from 'markdownit';
 
 const cmReader = new commonmark.Parser();
 const cmWriter = new commonmark.HtmlRenderer();
-const mdit = markdownit();
 
 const lf = `
 div::
@@ -97,6 +95,3 @@ Deno.bench('CommonMark', { n: 10_000 }, () => {
   cmWriter.render(cmReader.parse(md));
 });
 
-Deno.bench('MarkdownIt', { n: 10_000 }, () => {
-  mdit.render(md);
-})
