@@ -5,12 +5,12 @@ const entities = {
   "<": "&lt;",
   ">": "&gt;",
   '"': "&quot;",
-  "'": "&apos;",
-  "#": "&num;",
-  "[": "&lbrak;",
-  "]": "&rbrak;",
-  "{": "&rbrace;",
-  "}": "&lbrace;"
+  "'": "&apos;"
+  //  '#': '&num;',
+  //  '[': '&lbrak;',
+  //  ']': '&rbrak;',
+  //  '{': '&rbrace;',
+  //  '}': '&lbrace;',
 };
 function escape(value) {
   return value.replace(escapeRe, (match) => {

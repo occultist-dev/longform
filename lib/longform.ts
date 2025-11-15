@@ -30,11 +30,11 @@ const entities = {
   '>': '&gt;',
   '"': '&quot;',
   "'": '&apos;',
-  '#': '&num;',
-  '[': '&lbrak;',
-  ']': '&rbrak;',
-  '{': '&rbrace;',
-  '}': '&lbrace;',
+//  '#': '&num;',
+//  '[': '&lbrak;',
+//  ']': '&rbrak;',
+//  '{': '&rbrace;',
+//  '}': '&lbrace;',
 };
 
 function escape(value: string): string {

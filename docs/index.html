@@ -105,14 +105,14 @@ details {
   &lt;/hgroup&gt;
 &lt;/header&gt;
 </samp></pre></details><p>Unlike <b class=keyword>Markdown</b>, which excels in marking up article content but cannot express more recent additions to the HTML spec without falling back to HTML, the Longform syntax adds no constraints on the possible markup of the output format. As a result Longform plays well with custom HTML elements and elements and attributes which might be added to HTML in the future. And in being able to express elements such as <code>&lt;nav&gt;</code> or <code>&lt;head&gt;</code> it can be used effectively for static content markup for regions of the website beyond the main content.</p><p>Longform also supports directives which alter how a block of Longform or plain HTML / XML is processed. This specification will formalize directives which may be used in a browser environment using a minimal Longform parser.</p><p>For example, in a Longform template the directives <code>@allow-elements</code> and <code>@allow-attributes</code> can be used to allow user defined markup to be used in a template while filtering out any exempt markup. User input markup in the Longform syntax will have filtering rules applied by the Longform parser, while embedded HTML or XML content will require that an external serializer such as <a href=https://github.com/cure53/DOMPurify>DOMPurify</a> is configured to hook into the parser and apply the rules to the user defined content.</p><pre aria-describedby="template-sanitization-example"><code>@template
-&num;&num;card
-section.card.note-&num;&rbrace;position&lbrace;::
+card
+section.card.note-position::
   header::
-    h3:: &num;&rbrace;title&lbrace;
+    h3:: title
   @allow-attributes:: lang dir
-  @allow-elements:: details&lbrak;open name&rbrak; summary h4 p strong em a&lbrak;href target&rbrak;
+  @allow-elements:: detailsopen name summary h4 p strong em ahref target
   div.card-content::
-    &num;&num;&rbrace;content&lbrace;
+    content
 </code></pre><aside id="template-sanitization-example"><p><small>In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML and XML entities whereas the <code>##{content}</code> expansion will filter any elements and attributes not explicitly allowed by the directive from the resulting markup. These directives can be used many times through a document allowing user defined markup to have rules appropriate for the context.</small></p></aside><p>Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb when minified and gzipped and supporting most intended features for the browser environment. The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or Marked at 12kb. The parser is also fast, as it can complete its job by building up the resulting HTML fragment strings line by line instead of with a two step process of constructing and abstract syntax tree and then forming the valid output markup.</p></section>  <section id="fragments"><h2>Fragments</h2><aside><p>Longform's primary design goal is to output fragments of HTML in a form that can be rendered by another program into a complete HTML document, and when loaded as DOM in a browser, the fragments can be re-selected and referenced by a Javascript runtime. Since all Longform fragments are static content a Javascript runtime can re-use the existing DOM (or clones of) created from a Longform fragment and avoid hydration or re-rendering techniques that are often used by client side libraries, instead making sure that an equivilent DOM node is located in the correct location within the DOM if the runtime is rendering content around it.</p><p>To achieve this, depending on the fragment kind, a parser will embed HTML ids or data attributes in a fragment and expose valid selectors so the fragments can later be selected from the DOM.</p><p>Aside from the root fragment, all fragments should have a unique Longform identifier assigned to them so they can be referenced within the document or from the parsed content.</p></aside><h3>The root fragment</h3><p>The root fragment is an optional fragment that has no Longform identifier. There can be only one root fragment in a Longform document.</p><p>The root element of the root fragment has no whitespace preceeding it. The fragment has no Longform identifier but the root element can have a HTML identifier defined on it.</p><p>After a root fragment is found in the process of parsing a Longform document, all other fragments which do not have Longform identifiers assigned are ignored when rendering the output markup. The root fragment often would have the <a href="#directive-doctype"><code>@doctype</code></a> or <a href="#directive-xml"><code>@xml</code></a> directive prefixing it to add a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing the output markup.</p><pre><code>@doctype:: html
 html::
   head::
@@ -128,19 +128,19 @@ html::
     &lt;h1&gt;Example Root Fragment&lt;/h1&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-</samp></pre></details><h3>Fragments with embedded identifiers</h3><p>Fragments can have their Longform identifier embedded into the output markup as a HTML or XML id. Embedded ids should be unique to both the target document and Longform document. If a Longform fragment references a fragment with an embedded identifier, any other attempts to reference the embedded fragment will be ignored by the Longform parser. Fragments with embeded identifiers will also not be exported to be directly referenced by external software if they have been referenced in the Longform document.</p><pre><code>&num;embedded-id
+</samp></pre></details><h3>Fragments with embedded identifiers</h3><p>Fragments can have their Longform identifier embedded into the output markup as a HTML or XML id. Embedded ids should be unique to both the target document and Longform document. If a Longform fragment references a fragment with an embedded identifier, any other attempts to reference the embedded fragment will be ignored by the Longform parser. Fragments with embeded identifiers will also not be exported to be directly referenced by external software if they have been referenced in the Longform document.</p><pre><code>embedded-id
 section::
-  p:: A fragment that can be referenced by its &lt;a href=&num;embedded-id&gt;identifier&lt;/a&gt;
+  p:: A fragment that can be referenced by its &lt;a href=embedded-id&gt;identifier&lt;/a&gt;
 </code></pre><details><summary>Result</summary><pre><samp><code>&lt;section id=&quot;embedded-id&quot;&gt;
   &lt;p&gt;
-    A fragment that can be referenced by its &lt;a href=&quot;&num;embedded-id&quot;&gt;identifier&lt;/a&gt;
+    A fragment that can be referenced by its &lt;a href=&quot;embedded-id&quot;&gt;identifier&lt;/a&gt;
   &lt;/p&gt;
 &lt;/section&gt;
-</code></samp></pre></details><h3>Bare fragments</h3><p>Bare fragments have ids that can be referenced many times within the same Longform document and are always outputted to be used by external software. The given id is written to the output markup as a data attribute instead of an id.</p><pre><code>&num;&num;alert-something-went-wrong
-dialog&lbrak;open&rbrak;.error::
+</code></samp></pre></details><h3>Bare fragments</h3><p>Bare fragments have ids that can be referenced many times within the same Longform document and are always outputted to be used by external software. The given id is written to the output markup as a data attribute instead of an id.</p><pre><code>alert-something-went-wrong
+dialogopen.error::
   p::
     strong:: Something went wrong!
-  form&lbrak;method=dialog&rbrak;::
+  formmethod=dialog::
     button:: Close
 </code></pre><details><summary>Result</summary><pre><samp><code>&lt;dialog data-lf=&quot;alert-something-went-wrong&quot; open class=&quot;error&quot;&gt;
   &lt;strong&gt;Something went wrong!&lt;/strong&gt;
@@ -148,52 +148,52 @@ dialog&lbrak;open&rbrak;.error::
     &lt;button&gt;Close&lt;/botton&gt;
   &lt;/form&gt;
 &lt;/dialog&gt;
-</code></samp></pre></details><h3>Range fragments</h3><p>Range fragments can have more than one topmost element which are outputted as siblings. All top-most elements of the range fragment would have the same data attribute.</p><pre><code>&num;head-details &lbrak;
+</code></samp></pre></details><h3>Range fragments</h3><p>Range fragments can have more than one topmost element which are outputted as siblings. All top-most elements of the range fragment would have the same data attribute.</p><pre><code>head-details 
   title:: The range fragment
   meta::
-    &lbrak;name=description&rbrak;
-    &lbrak;content=Demonstraiting the range fragment&rbrak;
-&rbrak;
+    name=description
+    content=Demonstraiting the range fragment
+
 </code></pre><details><summary>Result</summary><pre><samp><code>&lt;title data-lf=&quot;head-details&quot;&gt;A range of fragments&lt;/title&gt;
 &lt;meta data-lf=&quot;head-details&quot; name=&quot;description&quot; content=&quot;Demonstraiting the range fragment&quot; /&gt;
 </code></samp></pre></details></section> <section id="elements"><h2>Declaring elements</h2><h3>Element tags</h3><p>A sole element tag can be outputted using the element name followed by two semicolons <code>::</code>.</p><pre><code>div::
-</code></pre><h3>Element attributes</h3><p>Element attributes are declared after the tag and are wrapped in square brackets <code>[]</code>.</p><pre><code>div&lbrak;data-foo=bar&rbrak;&lbrak;aria-describedby=&num;baz&rbrak;::
+</code></pre><h3>Element attributes</h3><p>Element attributes are declared after the tag and are wrapped in square brackets <code>[]</code>.</p><pre><code>divdata-foo=bararia-describedby=baz::
 </code></pre><p>Alternatively attributes can follow directly after the element tag with 1 level of indentation.</p><pre><code>div::
-  &lbrak;data-foo=bar&rbrak;
-  &lbrak;aria-describedby=&num;baz&rbrak;
+  data-foo=bar
+  aria-describedby=baz
 </code></pre><p>If an element is declared multiple times the content is concatinated into a single value. This behaviour does not apply to the element's id if it is defined using the attribute syntax. And classes will be concatinated with a space separating them.</p><pre><code>meta::
-  &lbrak;name=description&rbrak;
-  &lbrak;content=Lorem ipsum dolor sit amet, consectetur adipiscing elit.&rbrak;
-  &lbrak;content=Quisque a sem et nisl mollis porttitor et sit amet neque.&rbrak;
-  &lbrak;content=Maecenas suscipit nulla ac suscipit imperdiet. Quisque&rbrak;
-  &lbrak;content=odio nisi, semper non dui quis, feugiat faucibus ipsum.&rbrak;
-</code></pre><h3>Element output ids</h3><p>The elements output markup id can be declared on the line before the tag at the same indentation level with the hash <code>#</code> symbol pre-fixing the id.</p><pre><code>&num;element-id
+  name=description
+  content=Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  content=Quisque a sem et nisl mollis porttitor et sit amet neque.
+  content=Maecenas suscipit nulla ac suscipit imperdiet. Quisque
+  content=odio nisi, semper non dui quis, feugiat faucibus ipsum.
+</code></pre><h3>Element output ids</h3><p>The elements output markup id can be declared on the line before the tag at the same indentation level with the hash <code>#</code> symbol pre-fixing the id.</p><pre><code>element-id
 div::
-</code></pre><p>Alternatively the id can follow the tag name, before the closing semicolons. Again with a hash prefixing it. If the id had</p><pre><code>div&num;element-id::
-</code></pre><p>And finally the id can be declared using the attribute syntax.</p><pre><code>div&lbrak;id=element-id&rbrak;::
+</code></pre><p>Alternatively the id can follow the tag name, before the closing semicolons. Again with a hash prefixing it. If the id had</p><pre><code>divelement-id::
+</code></pre><p>And finally the id can be declared using the attribute syntax.</p><pre><code>divid=element-id::
 &lt;!-- or --&gt;
 div::
-  &lbrak;id=element-id&rbrak;
-</code></pre><p>If an element has an id declared for it twice only the first declaration is used.</p><h3>Element classes</h3><p>Classes can be defined following the element's tag declaration with a period <code>.</code> prefixing each tag.</p><pre><code>div&num;element-id.class-1.class-2.class-3::
-</code></pre><p>Alternatively classes can be defined using the attribute syntax on the lines following the tag definition.</p><pre><code>div&num;element-id::
-  &lbrak;class=class-1&rbrak;
-  &lbrak;class=class-2 class-3&rbrak;
+  id=element-id
+</code></pre><p>If an element has an id declared for it twice only the first declaration is used.</p><h3>Element classes</h3><p>Classes can be defined following the element's tag declaration with a period <code>.</code> prefixing each tag.</p><pre><code>divelement-id.class-1.class-2.class-3::
+</code></pre><p>Alternatively classes can be defined using the attribute syntax on the lines following the tag definition.</p><pre><code>divelement-id::
+  class=class-1
+  class=class-2 class-3
 </code></pre><h3>Element text and native markup content.</h3><p>Elements can have text and native markup following the tag declaration with a space between the text and the double colons of the element definition.</p><pre><code>div:: Text content with &lt;em&gt;some&lt;/em&gt; native markup.
 </code></pre><p>Alternatively, the text and native markup can follow the tag declaration with one extra indentation level.</p><pre><code>div::
   Text content with &lt;em&gt;some&lt;/em&gt; native markup.
 </code></pre><p><i>In conclusion</i> the Longform syntax is versatile, allowing elements to be declared without two much verbosity, unless it is required. Where Longform is best is in layout and heirachical markup. Blocks of text with inline HTML formatting often will look nicer when written in HTML.</p><h3>Preformatted text</h3><pre><code>div::
-  &num;element-id
+  element-id
   button::
-    &lbrak;class=class1 class2&rbrak;
-    &lbrak;class=class3&rbrak;
-    &lbrak;type=button&rbrak;
+    class=class1 class2
+    class=class3
+    type=button
     &lt;strong&gt;Text content&lt;/strong&gt;
-  button&num;element-id.class1.class2.class3&lbrak;type=button&rbrak;:: &lt;strong&gt;Text content&lt;/strong&gt;
+  buttonelement-id.class1.class2.class3type=button:: &lt;strong&gt;Text content&lt;/strong&gt;
 </code></pre><h3>Whitespace</h3><p>Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two spaces out from an element will be outputted as the child of that element.</p><p>Some exceptions for this are when native markup of the output language and text are being processed. Or when in a preformatted block.</p><h4>Comments</h4><p>Comments can be written outside of a fragment using <code>--</code> two hyphens. Within a fragment comments in the output markup language's syntax can be used but they will be written to the output alongside all other text in the native output markup.</p></section> <section id="templating"><h2>Templating</h2><p>Longform templates only allow key-value pairs inputed with the values being strings. The template is intended to be passed over to the client where the template might be rendered using client side state. It is assumed that the client has its own means to perform conditional statements and iterate, and is optimized to do so, so those functionalities are left to the scripting language to keep the templating logic lean.</p></section>  <section id="mediatype"><h2>Mediatype</h2><aside class="notice"><p>The Longform rules described above apply to the <b>text/longform</b> mediatype. This mediatype's feature set is limited to what is required for optimized client side usage of the Longform format. What follows after this section is for Longform pre-processors and patch utilities which are intended to run in a server side context.</p></aside></section> <section id="server-side-usage"><h2>Server side usage</h2><aside class="warning"><h3>Security considerations</h3><p>There is a security risk here where user edited content might set HTML ids or data attributes conflicting with Longform's own ids and data attributes causing the client side fragments selected from the user's content instead of the source document when using Longform in a Javascript application and rebuilding the Longform output from the DOM. This could happen by implemented HTTP Patch support, or by pre-processing a Longform document on the server.</p><p>Server side Longform pre-processors and utilities will need to implement different parsing approaches to the minimalist Longform parser <b>@longform/longform</b> which is optimized for clientside use and never identifies all HTML identifiers set in the source document and cannot apply filters on user generated content. It is also limited in its sanitization APIs so it can play well with the web standard sanitizers that are not yet implemented by all browsers.</p><p>If developing a Longform pre-processor or patch utility user content should be filtered to have conflicting ids or data attributes stripped that would conflict with Longform's selector output. <section id="pre-processing"><h3>Pre-processing</h3></section> <section id="http-patch"><h3>HTTP Patch support</h3></section></p></aside></section> <section id="directives"><h2>Directives</h2><dl><dt id="directive-url"><b><code>@url</code></b></dt><dd><p>Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code> using the <code>Accept</code> header <b>text/longform</b> should produce the same document unless it has since been modified.</p><pre><code>@url:: https://example.com/blog/article-1
 </code></pre></dd><dt id="directive-patchable"><b><code>@patchable</code></b></dt><dd><p>Asserts to the client that the document can be patched using a HTTP Patch request and the <code>Content-Type</code> header <b>text/longform</b>. The <code>@patchable</code> directive should be ignored unless the <code>@url</code> directive is used.</p><pre><code>@url:: http://example.com/blog/longform-1
 @patchable
 </code></pre></dd><dt id="directive-doctype"><b><code>@doctype</code></b></dt><dd><p>Inserts a doctype declaration before a fragment starts.</p><pre><code>@doctype:: html
-html&lbrak;lang=en&rbrak;::
+htmllang=en::
   head::
     ...
   body::
@@ -205,8 +205,8 @@ html&lbrak;lang=en&rbrak;::
 &lt;/html&gt;
 </samp></pre></details></dd><dt id="directive-xml"><b><code>@xml</code></b></dt><dd><p>Inserts an XML declaration before a fragment starts.</p><pre><code>@xml:: version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;
 html::
-  &lbrak;xmlns=http://www.w3.org/HTML/1998/html4&rbrak;
-  &lbrak;xmlns:xdc=http://www.xml.com/books&rbrak;
+  xmlns=http://www.w3.org/HTML/1998/html4
+  xmlns:xdc=http://www.xml.com/books
   body::
     ...
 </code></pre><details><summary>Result</summary><pre><samp>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
@@ -219,7 +219,7 @@ html::
   &lt;/body&gt;
 &lt;/html&gt;
 </samp></pre></details></dd><dt id="directive-editable"><b><code>@editable</code></b></dt><dd><p>Marks the children of an element as editable in a patch request. The element cannot be within a template and must have a Longform id set on it.</p><pre><code>@editable
-&num;edit-me
+edit-me
 div::
   This content is editable.
 </code></pre></dd><dt id="directive-global"><b><code>@global</code></b></dt><dd><p>Applies directive rules to an entire Longform document. Directives applied before or within a fragment will typically override globally set rules.</p><pre><code>@url:: https://example.com/pages/article-1
@@ -227,18 +227,18 @@ div::
 @global::
   @allowed-elements:: h4 p strong em b i small hr br
 </code></pre></dd><dt id="directive-allow-elements"><b><code>@allow-elements</code></b></dt><dd><p>In a template this directive instructs the parser what elements can be rendered when applying non-escaped variable expansion within its scope. If used in a patchable document, client side editors should limit what elements can be edited in the editable element. The directive's rules should also be used to sanitize or reject input when merging edits from a HTTP Patch request into the document on the server.</p><p>Attributes can be allowed on specific elements by listing them in square brackets directly after the element in the directive's arguments.</p><p>If this or the <code>@allow-all</code> directives are not used all elements should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
-@allow-elements:: a&lbrak;href target&rbrak; p strong em
+@allow-elements:: ahref target p strong em
 div::
   Edit me!
 </code></pre></dd><dt id="directive-allow-attributes"><b><code>@allow-attributes</code></b></dt><dd><p>In a template this directive instructs the parser what attributes can be rendered when applying non-escaped variable expansion within its scope. If used in a patchable document client side editors can limit what attributes can be added to the markup. The directive's rules should be used to sanitize or reject input when merging edits from a HTTP Patch request into the document on the server.</p><p>If this or the <code>@allow-all</code> directives are not used all attributes should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
 @allow-attributes:: id name class
-@allow-elements:: a&lbrak;href target&rbrak; p strong em form label&lbrak;for&rbrak; input button&lbrak;submit&rbrak;
+@allow-elements:: ahref target p strong em form labelfor input buttonsubmit
 div::
   Edit me...
 </code></pre></dd><dt id="directive-allow-data-attributes"><b><code>@allow-data-attributes</code></b></dt><dd><p>In a template this directive instructs the parser to allow rendering of data-attributes when applying non-escaped variable expansion within its scope. If used in a patchable document client side editors can allow data-attributes to be added to the markup.</p><p>If this or the <code>@allow-all</code> directives are not used all data-attributes should be filtered or rejected when editing or applying variable expansion.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
 @allow-data-attributes
 @allow-attributes:: id name class
-@allow-elements:: a&lbrak;href target&rbrak; p strong em form label&lbrak;for&rbrak; input button&lbrak;submit&rbrak;
+@allow-elements:: ahref target p strong em form labelfor input buttonsubmit
 div::
   Edit me...
 </code></pre></dd><dt id="directive-allow-all"><b><code>@allow-all</code></b></dt><dd><p>This directive instructs the parser to allow all elements, attributes and data-attributes when performing non-escaped variable expansion or when editing a patchable document.</p><p>This directive can be applied in a <code>@global</code> directive block to set the default rules for a document. The directive applied closest to a template variable expansion or editable element takes precedence.</p><pre><code>@editable
