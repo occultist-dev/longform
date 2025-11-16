@@ -594,7 +594,7 @@ section::
 
 #preformatted-blocks
 section::
-  h3:: Preformatted blocks
+  h2:: Preformatted blocks
   p::
     Longform does not assign special meaning to any HTML tags so to retain formatting
     content can be wrapped in curly braces to create a preformatted block.
