@@ -168,6 +168,8 @@ html[lang=en]::
               li::
                 a[href=#directive-xml]:: <code>@xml</code>
               li::
+                a[href=#directive-template]:: <code>@template</code>
+              li::
                 a[href=#directive-editable]:: <code>@editable</code>
               li::
                 a[href=#directive-global]:: <code>@global</code>
@@ -856,6 +858,23 @@ section::
               </body>
             </html>
           }
+    dt#directive-template::
+      b:: <code>@template</code>
+    dd::
+      p::
+        Marks a fragment as being a client side template. When a fragment
+        is a template the longform parser skips formatting the fragment
+        and outputs it separately to the processed fragments to be passed through
+        to the client. Client side logic can then pass the template into
+        a special longform template parser and have the HTML output returned.
+      pre::
+        code:: {
+          @template
+          #button-text "
+            Add new #{entityName}
+          "
+        }
+          
     dt#directive-editable::
       b:: <code>@editable</code>
     dd::
