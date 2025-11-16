@@ -125,9 +125,6 @@ html[lang=en]::
               a[href=#language-intro]:: Language Intro
           li::
             b::
-              a[href=#syntax]:: Syntax
-          li::
-            b::
               a[href=#fragments]:: Fragments
           li::
             b::
@@ -185,7 +182,6 @@ html[lang=en]::
     main#main::
       #[wip-notice]
       #[language-intro]
-      #[syntax]
       #[fragments]
       #[whitespace]
       #[elements]
