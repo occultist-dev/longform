@@ -4,7 +4,7 @@
   "author": "Matthew Quinn",
   "homepage": "https://github.com/occultist-dev/longform",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "main": "dist/longform.js",
   "types": "dist/longform.d.ts",
@@ -30,7 +30,12 @@
     "test": "node --test lib/longform.test.ts",
     "serve": "node ./serve.ts"
   },
-  "keywords": ["HTML", "Fragments", "Templating", "Longform"],
+  "keywords": [
+    "HTML",
+    "Fragments",
+    "Templating",
+    "Longform"
+  ],
   "devDependencies": {
     "@types/commonmark": "^0.27.10",
     "@types/jsdom": "^27.0.0",
