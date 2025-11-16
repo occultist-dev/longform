@@ -701,10 +701,11 @@ section::
   aside.notics::
     p::
       Longform templates are intended for client side templating where Javascript may
-      be performing any required logic before calling the template. Future versions
-      of Longform will include pre-processing templates which have more functionality.
+      be creating new markup and may format local values into the Longform markup.
+      Future versions of this spec will include pre-processing rules for generating
+      Longform documents using server side state and logic within the document.
     p::
-      When a longform document is procecsed, any templates will be provided as strings
+      When a longform document is processed, any templates will be provided as strings
       intented to be re-processed using a separate template processing function which
       knows how to expand any variables in the template.
 
