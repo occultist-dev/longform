@@ -1,4 +1,4 @@
-const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi, element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi, directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi, attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/, preformattedClose = /[ \t]*}}?[ \t]*/, id1 = /((?:\ \ )+)?#(#)?([\w\-]+)(?: ([\["]))?/gmi, idnt1 = /^(\ \ )+/, text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i, paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g, refRe = /#\[([\w\-]+)\]/g, escapeRe = /([&<>"'#\[\]{}])/g, templateLinesRe = /^(\ \ )?([^\n]*)$/gmi, voids = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wrb"]);
+const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi, element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi, directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi, attribute1 = /((?:\ \ )+)\[(\w[\w-]*(?::\w[\w-]*)?)(?:=([^\n]+))?\]/, preformattedClose = /[ \t]*}}?[ \t]*/, id1 = /((?:\ \ )+)?#(#)?([\w\-]+)(?: ([\["]))?/gmi, idnt1 = /^(\ \ )+/, text1 = /^((?:\ \ )+)([^ \n][^\n]*)$/i, paramsRe = /(?:(#|\.)([^#.\[\n]+)|(?:\[(\w[\w\-]*(?::\w[\w\-]*)?)(?:=([^\n\]]+))?\]))/g, refRe = /#\[([\w\-]+)\]/g, escapeRe = /([&<>"'#\[\]{}])/g, templateLinesRe = /^(\ \ )?([^\n]+)$/gmi, voids = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wrb"]);
 let m1, m2, m3;
 const entities = {
   "&": "&amp;",
@@ -276,20 +276,20 @@ export function longform(doc, debug = () => {
               fragment.template = indent === 0;
               templateLinesRe.lastIndex = sniffTestRe.lastIndex;
               while (m2 = templateLinesRe.exec(doc)) {
-                if (m2[1] == null && !indented) {
+                if (m2[1] == null && !indented && fragment.id == null) {
                   id1.lastIndex = 0;
                   m3 = id1.exec(m2[0]);
-                  fragment.id = m3[3];
+                  if (m3 != null) fragment.id = m3[3];
                   fragment.html += m2[0];
                 } else if (m2[1] == null && indented) {
-                  sniffTestRe.lastIndex = templateLinesRe.lastIndex - 1;
-                  applyIndent(0);
+                  sniffTestRe.lastIndex = templateLinesRe.lastIndex - m2[0].length;
                   break;
                 } else {
                   fragment.html += "\n" + m2[0];
+                  if (m2[1] != null) indented = true;
                 }
-                indented = true;
               }
+              applyIndent(0);
             }
           }
           break;

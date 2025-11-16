@@ -285,3 +285,31 @@ test('It renders plan text fragments', { skip: true }, () => {
   const res = processTemplate('label', { position: 4 }, parsed);
 })
 
+const lf9 = `
+@template
+#my-template
+div[aria-label=Something something #{position}]::
+  Hello world!
+
+#other-fragment
+div::
+  p:: Test
+`;
+const html9 = `\
+<div id="other-fragment"><p>Test</p></div>\
+`;
+const template9 = `\
+<div id="my-template" aria-label="Something something 4">Hello world!</div>\
+`;
+test('It renders templated element fragments', () => {
+  const parsed = longform(lf9);
+  console.log(parsed)
+  const res = processTemplate(parsed.templates['my-template'], { position: 4 }, x => {
+    return parsed.fragments[x]?.html;
+  });
+
+  assert.equal(parsed.fragments['other-fragment'].html, html9);
+  assert.equal(res, template9);
+});
+
+
