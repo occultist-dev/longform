@@ -806,7 +806,7 @@ section::
       b:: <code>@doctype</code>
     dd::
       p::
-        Inserts a doctype declaration before a fragment starts.
+        Inserts a doctype declaration at the beginning of a fragment.
       pre::
         code:: {
           @doctype:: html
@@ -830,7 +830,7 @@ section::
       b:: <code>@xml</code>
     dd::
       p::
-        Inserts an XML declaration before a fragment starts.
+        Inserts an XML declaration at the beginning of a fragment.
       pre::
         code:: {
           @xml:: version="1.0" encoding="UTF-8"
