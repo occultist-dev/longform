@@ -18,6 +18,9 @@ header, main {
   margin-left: auto;
   margin-right: auto;
 }
+section {
+  margin-bottom: 3rem;
+}
 hgroup p {
   font-style: italic;
 }
@@ -86,7 +89,7 @@ details {
     bottom: 2rem;
   }
 }
-</style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing <b class=keyword> HTML</b> and <b class=keyword>XML</b> document fragments.</p></hgroup><nav><ul id="toc"><li><b><a href="#language-intro">Language Intro</a></b></li><li><b><a href="#syntax">Syntax</a></b></li><li><b><a href="#fragments">Fragments</a></b></li><li><b><a href="#elements">Elements</a></b></li><li><b><a href="#mediatype">Mediatype</a></b></li><li><b><a href="#server-side-usage">Server side usage</a></b><ul><li><a href="#pre-processing">Pre-processing</a></li><li><a href="#http-patch">HTTP Patch</a></li></ul></li><li><b><a href="#directives">Directives</a></b><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><aside id="wip-notice" class="warning"><p><strong>This document and the parser that creates it are works in progress. View the <a href="https://github.com/occultist-dev/longform/blob/main/spec/intro.lf">Longform source file</a> to get a feel for the language.</strong></p></aside> <section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
+</style></head><body><header><hgroup><h1>Longform Markup Language</h1><p>A markup and templating language for producing <b class=keyword> HTML</b> and <b class=keyword>XML</b> document fragments.</p></hgroup><nav><ul id="toc"><li><b><a href="#language-intro">Language Intro</a></b></li><li><b><a href="#syntax">Syntax</a></b></li><li><b><a href="#fragments">Fragments</a></b></li><li><b><a href="#whitespace">Whitespace</a></b></li><li><b><a href="#elements">Elements</a></b></li><li><b><a href="#preformatted-blocks">Preformatted blocks</a></b></li><li><b><a href="#comments">Comments</a></b></li><li><b><a href="#embedding-fragments">Embedding fragments</a></b></li><li><b><a href="#templating">Templating</a></b></li><li><b><a href="#directives">Directives</a></b><ul><li><a href="#directive-url"><code>@url</code></a></li><li><a href="#directive-patchable"><code>@patchable</code></a></li><li><a href="#directive-doctype"><code>@doctype</code></a></li><li><a href="#directive-xml"><code>@xml</code></a></li><li><a href="#directive-editable"><code>@editable</code></a></li><li><a href="#directive-global"><code>@global</code></a></li><li><a href="#directive-allow-elements"><code>@allow-elements</code></a></li><li><a href="#directive-allow-attributes"><code>@allow-attributes</code></a></li><li><a href="#directive-allow-data-attributes"><code>@allow-data-attributes</code></a></li><li><a href="#directive-allow-all"><code>@allow-all</code></a></li></ul></li></ul></nav></header><main id="main"><aside id="wip-notice" class="warning"><p><strong>This document and the parser that creates it are works in progress. View the <a href="https://github.com/occultist-dev/longform/blob/main/spec/intro.lf">Longform source file</a> to get a feel for the language.</strong></p></aside> <section id="language-intro"><h2>Language Intro</h2><p><b class=keyword>Longform</b> is an easy to read markup and templating language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>. A longform document can be parsed to a complete document in the output format or as fragments to be used by a application as a source of markup when generating a document, or when manipulating DOM in a browser environment.</p><pre><code>header::
   hgroup::
     h1:: Longform Markup Language
     p::
@@ -156,20 +159,24 @@ dialog[open].error::
 ]
 </code></pre><details><summary>Result</summary><pre><samp><code>&lt;title data-lf=&quot;head-details&quot;&gt;A range of fragments&lt;/title&gt;
 &lt;meta data-lf=&quot;head-details&quot; name=&quot;description&quot; content=&quot;Demonstraiting the range fragment&quot; /&gt;
-</code></samp></pre></details></section> <section id="elements"><h2>Declaring elements</h2><h3>Element tags</h3><p>A sole element tag can be outputted using the element name followed by two semicolons <code>::</code>.</p><pre><code>div::
+</code></samp></pre></details><h3>Text fragments</h3><p>Text fragments do not include any elements. Programs using Longform output can use text fragments in locations where elements are not allowed such as HTML attributes. Text fragments are particulaly useful where Longform is being used as a master document for all translated copy for a webpage.</p><pre><code>#aria-label &quot;
+  Create a recipe
+&quot;
+</code></pre><details><summary>Result</summary><pre><samp><code>Create a recipe
+</code></samp></pre></details></section> <section id="whitespace"><h2>Whitespace</h2><p>Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two spaces out from an element will be outputted as a child of that element.</p><p>Some exceptions for this are when native markup of the output language and text are being processed. Or when in a <a href="#preformatted-blocks">preformatted block</a>.</p></section> <section id="elements"><h2>Declaring elements</h2><h3>Element tags</h3><p>A sole element tag can be outputted using the element name followed by two colons <code>::</code>.</p><pre><code>div::
 </code></pre><h3>Element attributes</h3><p>Element attributes are declared after the tag and are wrapped in square brackets <code>[]</code>.</p><pre><code>div[data-foo=bar][aria-describedby=#baz]::
 </code></pre><p>Alternatively attributes can follow directly after the element tag with 1 level of indentation.</p><pre><code>div::
   [data-foo=bar]
   [aria-describedby=#baz]
-</code></pre><p>If an element is declared multiple times the content is concatinated into a single value. This behaviour does not apply to the element's id if it is defined using the attribute syntax. And classes will be concatinated with a space separating them.</p><pre><code>meta::
+</code></pre><p>If an element is declared multiple times the content is concatinated into a single value. This behaviour does not apply to the element's id if it is defined using the attribute syntax. Classes will be concatinated with a space separating them.</p><pre><code>meta::
   [name=description]
   [content=Lorem ipsum dolor sit amet, consectetur adipiscing elit.]
   [content=Quisque a sem et nisl mollis porttitor et sit amet neque.]
   [content=Maecenas suscipit nulla ac suscipit imperdiet. Quisque]
   [content=odio nisi, semper non dui quis, feugiat faucibus ipsum.]
-</code></pre><h3>Element output ids</h3><p>The elements output markup id can be declared on the line before the tag at the same indentation level with the hash <code>#</code> symbol pre-fixing the id.</p><pre><code>#element-id
+</code></pre><h3>Element output ids</h3><p>The elements output markup id can be declared on the line before the tag at the same indentation level with the hash <code>#</code> symbol pre-fixing the id.</p><p>This form of giving an element an id also gives it a meaningful Longform identifier.</p><pre><code>#element-id
 div::
-</code></pre><p>Alternatively the id can follow the tag name, before the closing semicolons. Again with a hash prefixing it. If the id had</p><pre><code>div#element-id::
+</code></pre><p>Alternatively the id can follow the tag name, before the closing semicolons. Again with a hash prefixing it. Unlike the form where the</p><pre><code>div#element-id::
 </code></pre><p>And finally the id can be declared using the attribute syntax.</p><pre><code>div[id=element-id]::
 &lt;!-- or --&gt;
 div::
@@ -181,15 +188,53 @@ div::
 </code></pre><h3>Element text and native markup content.</h3><p>Elements can have text and native markup following the tag declaration with a space between the text and the double colons of the element definition.</p><pre><code>div:: Text content with &lt;em&gt;some&lt;/em&gt; native markup.
 </code></pre><p>Alternatively, the text and native markup can follow the tag declaration with one extra indentation level.</p><pre><code>div::
   Text content with &lt;em&gt;some&lt;/em&gt; native markup.
-</code></pre><p><i>In conclusion</i> the Longform syntax is versatile, allowing elements to be declared without two much verbosity, unless it is required. Where Longform is best is in layout and heirachical markup. Blocks of text with inline HTML formatting often will look nicer when written in HTML.</p><h3>Preformatted text</h3><pre><code>div::
-  #element-id
-  button::
-    [class=class1 class2]
-    [class=class3]
-    [type=button]
-    &lt;strong&gt;Text content&lt;/strong&gt;
-  button#element-id.class1.class2.class3[type=button]:: &lt;strong&gt;Text content&lt;/strong&gt;
-</code></pre><h3>Whitespace</h3><p>Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two spaces out from an element will be outputted as the child of that element.</p><p>Some exceptions for this are when native markup of the output language and text are being processed. Or when in a preformatted block.</p><h4>Comments</h4><p>Comments can be written outside of a fragment using <code>--</code> two hyphens. Within a fragment comments in the output markup language's syntax can be used but they will be written to the output alongside all other text in the native output markup.</p></section> <section id="templating"><h2>Templating</h2><p>Longform templates only allow key-value pairs inputed with the values being strings. The template is intended to be passed over to the client where the template might be rendered using client side state. It is assumed that the client has its own means to perform conditional statements and iterate, and is optimized to do so, so those functionalities are left to the scripting language to keep the templating logic lean.</p></section>  <section id="mediatype"><h2>Mediatype</h2><aside class="notice"><p>The Longform rules described above apply to the <b>text/longform</b> mediatype. This mediatype's feature set is limited to what is required for optimized client side usage of the Longform format. What follows after this section is for Longform pre-processors and patch utilities which are intended to run in a server side context.</p></aside></section> <section id="server-side-usage"><h2>Server side usage</h2><aside class="warning"><h3>Security considerations</h3><p>There is a security risk here where user edited content might set HTML ids or data attributes conflicting with Longform's own ids and data attributes causing the client side fragments selected from the user's content instead of the source document when using Longform in a Javascript application and rebuilding the Longform output from the DOM. This could happen by implemented HTTP Patch support, or by pre-processing a Longform document on the server.</p><p>Server side Longform pre-processors and utilities will need to implement different parsing approaches to the minimalist Longform parser <b>@longform/longform</b> which is optimized for clientside use and never identifies all HTML identifiers set in the source document and cannot apply filters on user generated content. It is also limited in its sanitization APIs so it can play well with the web standard sanitizers that are not yet implemented by all browsers.</p><p>If developing a Longform pre-processor or patch utility user content should be filtered to have conflicting ids or data attributes stripped that would conflict with Longform's selector output. <section id="pre-processing"><h3>Pre-processing</h3></section> <section id="http-patch"><h3>HTTP Patch support</h3></section></p></aside></section> <section id="directives"><h2>Directives</h2><dl><dt id="directive-url"><b><code>@url</code></b></dt><dd><p>Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code> using the <code>Accept</code> header <b>text/longform</b> should produce the same document unless it has since been modified.</p><pre><code>@url:: https://example.com/blog/article-1
+</code></pre></section> <section id="preformatted-blocks"><h3>Preformatted blocks</h3><p>Longform does not assign special meaning to any HTML tags so to retain formatting content can be wrapped in curly braces to create a preformatted block.</p><dl><dt><b>Escaped preformatted block</b></dt><dd>When an element is followed by a single curly brace, its content is HTML escaped and its whitespace is preserved at the children's indent level.<pre><code>pre::
+  code:: {
+    div::
+      &lt;p&gt;
+        This content will preserve its formatting including
+        the parent &lt;code&gt;div::&lt;/code&gt;
+      &lt;/p&gt;
+  }
+</code></pre><details><summary>Result</summary><pre><samp>&lt;pre&gt;&lt;code&gt;
+  div::
+    &lt;p&gt;
+      This content will preserve its formatting including
+      the parent &lt;code&gt;div::&lt;/code&gt;
+    &lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
+</samp></pre></details></dd><dt><b>Un-escaped preformatted text</b></dt><dd>When an element is followed by a two curly braces, its formatting and content is kept intact.<pre><code>script:: {{
+  console.log(&apos;Hello, World!&apos;);
+}}
+style:: {{
+  div {
+    color: red;
+  }
+}}
+</code></pre><details><summary>Result</summary><pre><samp>&lt;script&gt;
+  console.log(&apos;Hello, World!&apos;);
+&lt;/script&gt;&lt;style&gt;
+  div {
+    color: red;
+  }
+&lt;/style&gt;
+</samp></pre></details></dd></dl></section> <section id="comments"><h2>Comments</h2><p>Comments can be written outside of a fragment using <code>--</code> two hyphens. Within a fragment comments in the output markup language's syntax can be used but they will be written to the output alongside all other text in the native output markup.</p></section> <section id="embedding-fragments"><h2>Embedding fragments</h2><p>Fragments can be embedded into other fragments as part of the longform parsing allowing a full document to be created from many fragments. Fragments are embedded using the syntax &num;[fragment-id].</p><pre><code>main#main::
+  #[wip-notice]
+  #[language-intro]
+  #[syntax]
+  #[fragments]
+  #[whitespace]
+  #[elements]
+  #[preformatted-blocks]
+  #[templating]
+  #[selecting-from-dom]
+  #[mediatype]
+  #[server-side-usage]
+  #[directives]
+</code></pre></section> <section id="templating"><h2>Templating</h2><aside class="notics"><p>Longform templates are intended for client side templating where Javascript may be performing any required logic before calling the template. Future versions of Longform will include pre-processing templates which have more functionality.</p><p>When a longform document is procecsed, any templates will be provided as strings intented to be re-processed using a separate template processing function which knows how to expand any variables in the template.</p></aside><p>Longform templates only allow key-value pairs inputed with the values being strings. The template is intended to be passed over to the client where the template might be rendered using client side state. It is assumed that the client has its own means to perform conditional statements and iterate, and is optimized to do so, so those functionalities are left to the scripting language to keep the templating logic lean.</p><pre><code>@template
+div::
+  h3:: Recipe step #{position}
+</code></pre></section>    <section id="directives"><h2>Directives</h2><dl><dt id="directive-url"><b><code>@url</code></b></dt><dd><p>Sets the URL of the Longform document. A HTTP Get request to the <code>@url</code> using the <code>Accept</code> header <b>text/longform</b> should produce the same document unless it has since been modified.</p><pre><code>@url:: https://example.com/blog/article-1
 </code></pre></dd><dt id="directive-patchable"><b><code>@patchable</code></b></dt><dd><p>Asserts to the client that the document can be patched using a HTTP Patch request and the <code>Content-Type</code> header <b>text/longform</b>. The <code>@patchable</code> directive should be ignored unless the <code>@url</code> directive is used.</p><pre><code>@url:: http://example.com/blog/longform-1
 @patchable
 </code></pre></dd><dt id="directive-doctype"><b><code>@doctype</code></b></dt><dd><p>Inserts a doctype declaration before a fragment starts.</p><pre><code>@doctype:: html

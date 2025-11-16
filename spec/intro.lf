@@ -29,6 +29,9 @@
       margin-left: auto;
       margin-right: auto;
     }
+    section {
+      margin-bottom: 3rem;
+    }
     hgroup p {
       font-style: italic;
     }
@@ -128,18 +131,33 @@ html[lang=en]::
               a[href=#fragments]:: Fragments
           li::
             b::
+              a[href=#whitespace]:: Whitespace
+          li::
+            b::
               a[href=#elements]:: Elements
           li::
             b::
-              a[href=#mediatype]:: Mediatype
+              a[href=#preformatted-blocks]:: Preformatted blocks
           li::
             b::
-              a[href=#server-side-usage]:: Server side usage
-            ul::
-              li::
-                a[href=#pre-processing]:: Pre-processing
-              li::
-                a[href=#http-patch]:: HTTP Patch
+              a[href=#comments]:: Comments
+          li::
+            b::
+              a[href=#embedding-fragments]:: Embedding fragments
+          li::
+            b::
+              a[href=#templating]:: Templating
+--        li::
+--          b::
+--            a[href=#mediatype]:: Mediatype
+--          li::
+--            b::
+--              a[href=#server-side-usage]:: Server side usage
+--            ul::
+--              li::
+--                a[href=#pre-processing]:: Pre-processing
+--              li::
+--                a[href=#http-patch]:: HTTP Patch
           li::
             b::
               a[href=#directives]:: Directives
@@ -169,7 +187,11 @@ html[lang=en]::
       #[language-intro]
       #[syntax]
       #[fragments]
+      #[whitespace]
       #[elements]
+      #[preformatted-blocks]
+      #[comments]
+      #[embedding-fragments]
       #[templating]
       #[selecting-from-dom]
       #[mediatype]
@@ -419,6 +441,27 @@ section::
           <meta data-lf="head-details" name="description" content="Demonstraiting the range fragment" />
         }
 
+  h3:: Text fragments
+  p::
+    Text fragments do not include any elements. Programs using Longform output can use text fragments
+    in locations where elements are not allowed such as HTML attributes. Text fragments are particulaly
+    useful where Longform is being used as a master document for all translated copy for a webpage.
+
+  pre::
+    code:: {
+      #aria-label "
+        Create a recipe
+      "
+    }
+  
+  details::
+    summary:: Result
+    pre::
+      samp::
+        code:: {
+          Create a recipe
+        }
+
 #elements
 section::
   h2:: Declaring elements
@@ -426,7 +469,7 @@ section::
   h3:: Element tags
   p::
     A sole element tag can be outputted using the element name followed
-    by two semicolons <code>::</code>.
+    by two colons <code>::</code>.
 
   pre::
     code:: {
@@ -456,8 +499,8 @@ section::
   p::
     If an element is declared multiple times the content is concatinated
     into a single value. This behaviour does not apply to the element's id
-    if it is defined using the attribute syntax. And classes will be
-    concatinated with a space separating them.
+    if it is defined using the attribute syntax. Classes will be concatinated
+    with a space separating them.
   pre::
     code:: {
       meta::
@@ -474,6 +517,9 @@ section::
     The elements output markup id can be declared on the line before the
     tag at the same indentation level with the hash <code>#</code> symbol
     pre-fixing the id.
+  p::
+    This form of giving an element an id also gives it a meaningful Longform
+    identifier.
   pre::
     code:: {
       #element-id
@@ -482,7 +528,7 @@ section::
 
   p::
     Alternatively the id can follow the tag name, before the closing semicolons.
-    Again with a hash prefixing it. If the id had
+    Again with a hash prefixing it. Unlike the form where the 
   pre::
     code:: {
       div#element-id::
@@ -539,48 +585,133 @@ section::
         Text content with <em>some</em> native markup.
     }
 
-  p::
-    <i>In conclusion</i> the Longform syntax is versatile, allowing elements to be declared
-    without two much verbosity, unless it is required. Where Longform is best is
-    in layout and heirachical markup. Blocks of text with inline HTML formatting
-    often will look nicer when written in HTML.
-
-  h3:: Preformatted text
-
-  pre::
-    code:: {
-      div::
-        #element-id
-        button::
-          [class=class1 class2]
-          [class=class3]
-          [type=button]
-
-          <strong>Text content</strong>
-
-        button#element-id.class1.class2.class3[type=button]:: <strong>Text content</strong>
-    }
-
-
-  h3:: Whitespace
+#whitespace
+section::
+  h2:: Whitespace
   p::
     Whitespace is meaningful in <strong>Longform</strong>. Any markup indented two
-    spaces out from an element will be outputted as the child of that element.
-
+    spaces out from an element will be outputted as a child of that element.
   p::
     Some exceptions for this are when native markup of the output language and text
-    are being processed. Or when in a preformatted block.
+    are being processed. Or when in a
+    <a href="#preformatted-blocks">preformatted block</a>.
 
-  h4:: Comments
+#preformatted-blocks
+section::
+  h3:: Preformatted blocks
+  p::
+    Longform does not assign special meaning to any HTML tags so to retain formatting
+    content can be wrapped in curly braces to create a preformatted block.
+  
+  dl::
+    dt::
+      b:: Escaped preformatted block
+    dd::
+      When an element is followed by a single curly brace, its content is HTML escaped
+      and its whitespace is preserved at the children's indent level.
+      pre::
+        code:: {
+          pre::
+            code:: {
+              div::
+                <p>
+                  This content will preserve its formatting including
+                  the parent <code>div::</code>
+                </p>
+            }
+        }
+
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <pre><code>
+              div::
+                <p>
+                  This content will preserve its formatting including
+                  the parent <code>div::</code>
+                </p>
+            </code></pre>
+          }
+    
+    dt::
+      b:: Un-escaped preformatted text
+    dd::
+      When an element is followed by a two curly braces, its formatting
+      and content is kept intact.
+      pre::
+        code:: {
+          script:: {{
+            console.log('Hello, World!');
+          }}
+          style:: {{
+            div {
+              color: red;
+            }
+          }}
+        }
+        
+
+      details::
+        summary:: Result
+        pre::
+          samp:: {
+            <script>
+              console.log('Hello, World!');
+            </script><style>
+              div {
+                color: red;
+              }
+            </style>
+          }
+
+#comments
+section::
+  h2:: Comments
   p::
     Comments can be written outside of a fragment using <code>--</code> two hyphens.
     Within a fragment comments in the output markup language's syntax can be used
     but they will be written to the output alongside all other text in the native
     output markup.
-    
+
+#embedding-fragments
+section::
+  h2:: Embedding fragments
+  p::
+    Fragments can be embedded into other fragments as part of the longform parsing
+    allowing a full document to be created from many fragments. Fragments are
+    embedded using the syntax &num;[fragment-id].
+
+  pre::
+    code:: {
+      main#main::
+        #[wip-notice]
+        #[language-intro]
+        #[syntax]
+        #[fragments]
+        #[whitespace]
+        #[elements]
+        #[preformatted-blocks]
+        #[templating]
+        #[selecting-from-dom]
+        #[mediatype]
+        #[server-side-usage]
+        #[directives]
+    }
+
 #templating
 section::
   h2:: Templating
+  aside.notics::
+    p::
+      Longform templates are intended for client side templating where Javascript may
+      be performing any required logic before calling the template. Future versions
+      of Longform will include pre-processing templates which have more functionality.
+    p::
+      When a longform document is procecsed, any templates will be provided as strings
+      intented to be re-processed using a separate template processing function which
+      knows how to expand any variables in the template.
+
   p::
     Longform templates only allow key-value pairs inputed with the values being strings.
     The template is intended to be passed over to the client where the template might
@@ -588,44 +719,52 @@ section::
     own means to perform conditional statements and iterate, and is optimized to do so,
     so those functionalities are left to the scripting language to keep the templating logic lean.
 
-
-#mediatype
-section::
-  h2:: Mediatype
-  aside.notice::
-    p::
-      The Longform rules described above apply to the <b>text/longform</b> mediatype. This
-      mediatype's feature set is limited to what is required for optimized client side usage
-      of the Longform format. What follows after this section is for Longform pre-processors
-      and patch utilities which are intended to run in a server side context.
+  pre::
+    code:: {
+      @template
+      div::
+        h3:: Recipe step #{position}
+    }
 
 
-#server-side-usage
-section::
-  h2:: Server side usage
-  aside.warning::
-    h3:: Security considerations
-    p::
-      There is a security risk here where user edited content might set HTML ids or data
-      attributes conflicting with Longform's own ids and data attributes causing the
-      client side fragments selected from the user's content instead of the source
-      document when using Longform in a Javascript application and rebuilding the Longform
-      output from the DOM. This could happen by implemented HTTP Patch support, or by
-      pre-processing a Longform document on the server.
-    p::
-      Server side Longform pre-processors and utilities will need to implement different
-      parsing approaches to the minimalist Longform parser <b>@longform/longform</b>
-      which is optimized for clientside use and never identifies all HTML identifiers
-      set in the source document and cannot apply filters on user generated content. It
-      is also limited in its sanitization APIs so it can play well with the web standard
-      sanitizers that are not yet implemented by all browsers.
-    p::
-      If developing a Longform pre-processor or patch utility user content should be filtered
-      to have conflicting ids or data attributes stripped that would conflict with Longform's
-      selector output.
+-- #mediatype
+-- section::
+--   h2:: Mediatype
+--   aside.notice::
+--     p::
+--       The Longform rules described above apply to the <b>text/longform</b> mediatype. This
+--       mediatype's feature set is limited to what is required for optimized client side usage
+--       of the Longform format. What follows after this section is for Longform pre-processors
+--       and patch utilities which are intended to run in a server side context.
 
-  #[pre-processing]
-  #[http-patch]
+
+-- #server-side-usage
+-- section::
+--   h2:: Server side usage
+--   aside.warning::
+--     h3:: Security considerations
+--     p::
+--       
+--       There is a security risk t where user edited content might set HTML ids or data
+--       attributes conflicting with Longform's own ids and data attributes causing the
+--       client side fragments selected from the user's content instead of the source
+--       document when using Longform in a Javascript application and rebuilding the Longform
+--       output from the DOM. This could happen by implemented HTTP Patch support, or by
+--       pre-processing a Longform document on the server.
+--     p::
+--       Server side Longform pre-processors and utilities will need to implement different
+--       parsing approaches to the minimalist Longform parser <b>@longform/longform</b>
+--       which is optimized for clientside use and never identifies all HTML identifiers
+--       set in the source document and cannot apply filters on user generated content. It
+--       is also limited in its sanitization APIs so it can play well with the web standard
+--       sanitizers that are not yet implemented by all browsers.
+--     p::
+--       If developing a Longform pre-processor or patch utility user content should be filtered
+--       to have conflicting ids or data attributes stripped that would conflict with Longform's
+--       selector output.
+-- 
+--   #[pre-processing]
+--   #[http-patch]
 
 
 #pre-processing
