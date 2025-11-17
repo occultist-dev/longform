@@ -25,27 +25,21 @@ function makeElement(indent = 0) {
     attrs: {}
   };
 }
-function makeChunk(type = "parsed") {
-  return {
-    type,
-    html: "",
-    els: []
-  };
-}
 function makeFragment(type = "bare") {
   return {
     type,
     html: "",
     template: false,
+    mountable: false,
     els: [],
-    chunks: [],
-    refs: []
+    refs: [],
+    mountPoints: []
   };
 }
 export function longform(doc, debug = () => {
 }) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-  let skipping = false, textIndent = null, verbatimSerialize = true, verbatimIndent = null, verbatimFirst = false, element = makeElement(), chunk = makeChunk(), fragment = makeFragment(), root = null;
+  let skipping = false, textIndent = null, verbatimSerialize = true, verbatimIndent = null, verbatimFirst = false, element = makeElement(), fragment = makeFragment(), root = null;
   const claimed = /* @__PURE__ */ new Set(), parsed = /* @__PURE__ */ new Map(), output = /* @__PURE__ */ Object.create(null);
   output.fragments = /* @__PURE__ */ Object.create(null);
   output.templates = /* @__PURE__ */ Object.create(null);
@@ -59,6 +53,9 @@ export function longform(doc, debug = () => {
         } else if (fragment.type === "bare" || fragment.type === "range") {
           fragment.html += ` data-lf="${fragment.id}"`;
         }
+      }
+      if (element.mount != null) {
+        fragment.html += ` data-lf-mount="${element.mount}"`;
       }
       if (element.id != null) {
         fragment.html += ' id="' + element.id + '"';
@@ -224,6 +221,17 @@ export function longform(doc, debug = () => {
               }
             }
           }
+          if (element.mount != null) {
+            const id = element.mount;
+            applyIndent(indent + 1);
+            fragment.mountPoints.push({
+              id,
+              part: fragment.html
+            });
+            fragment.html = "";
+            applyIndent(indent);
+            break;
+          }
           if (!pr && tx != null) {
             element.text = tx;
           } else if (pr) {
@@ -290,6 +298,17 @@ export function longform(doc, debug = () => {
                 }
               }
               applyIndent(0);
+              break;
+            }
+            case "mount": {
+              if (m2[3] == null) {
+                throw new Error("Mount points must have a name");
+              } else if (fragment.type !== "root") {
+                throw new Error("Mounting is only allowed on a root element");
+              }
+              fragment.mountable = true;
+              element.mount = m2[3].trim();
+              break;
             }
           }
           break;
@@ -341,6 +360,12 @@ export function longform(doc, debug = () => {
     }
     fragment2.refs = [];
     return fragment2;
+  }
+  if (root == null ? void 0 : root.mountable) {
+    output.mountable = true;
+    output.tail = root.html;
+    output.mountPoints = root.mountPoints;
+    return output;
   }
   for (let i = 0; i < parsed.size + 1; i++) {
     let fragment2;

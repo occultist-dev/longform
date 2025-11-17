@@ -8,14 +8,9 @@ declare module "types" {
         attrs: Record<string, string | null>;
         text?: string;
         html: string;
+        mount?: string;
     };
-    export type ChunkType = 'parsed' | 'ref' | 'scope';
-    export type WorkingChunk = {
-        type: ChunkType;
-        html: string;
-        els: WorkingElement[];
-    };
-    export type WorkingFragmentType = 'root' | 'embed' | 'bare' | 'range' | 'text' | 'template';
+    export type WorkingFragmentType = 'root' | 'embed' | 'bare' | 'range' | 'text' | 'mount' | 'template';
     export type FragmentType = 'embed' | 'bare' | 'range' | 'text';
     export type FragmentRef = {
         id: string;
@@ -25,11 +20,12 @@ declare module "types" {
     export type WorkingFragment = {
         id?: string;
         template: boolean;
+        mountable: boolean;
         type: WorkingFragmentType;
         html: string;
         refs: FragmentRef[];
-        chunks: WorkingChunk[];
         els: WorkingElement[];
+        mountPoints: MountPoint[];
     };
     export type Fragment = {
         id: string;
@@ -37,9 +33,16 @@ declare module "types" {
         type: FragmentType;
         html: string;
     };
+    export type MountPoint = {
+        id: string;
+        part: string;
+    };
     export type ParsedResult = {
+        mountable?: boolean;
         root: string | null;
         selector: string | null;
+        mountPoints: MountPoint[];
+        tail?: string;
         fragments: Record<string, Fragment>;
         templates: Record<string, string>;
     };
