@@ -1,4 +1,4 @@
-import type { ChunkType, FragmentType, ParsedResult, WorkingChunk, WorkingElement, WorkingFragment, Fragment } from "./types.ts";
+import type { FragmentType, ParsedResult, WorkingElement, WorkingFragment, Fragment } from "./types.ts";
 
 export type {
   FragmentType,
@@ -51,22 +51,15 @@ function makeElement(indent: number = 0): WorkingElement {
   };
 }
 
-function makeChunk(type: ChunkType = 'parsed'): WorkingChunk {
-  return {
-    type,
-    html: '',
-    els: [],
-  };
-}
-
 function makeFragment(type: FragmentType = 'bare'): WorkingFragment {
   return {
     type,
     html: '',
     template: false,
+    mountable: false,
     els: [],
-    chunks: [],
     refs: [],
+    mountPoints: [],
   };
 }
 
@@ -84,7 +77,6 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     , verbatimIndent: number | null = null
     , verbatimFirst: boolean = false
     , element: WorkingElement = makeElement()
-    , chunk: WorkingChunk | null = makeChunk()
     , fragment: WorkingFragment = makeFragment()
     // the root fragment
     , root: WorkingFragment | null = null
@@ -117,6 +109,10 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
         } else if (fragment.type === 'bare' || fragment.type === 'range') {
           fragment.html += ` data-lf="${fragment.id}"`;
         }
+      }
+
+      if (element.mount != null) {
+        fragment.html += ` data-lf-mount="${element.mount}"`;
       }
 
       if (element.id != null) {
@@ -343,6 +339,21 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
             }
           }
 
+          // this is a hack to get temp support of mounting
+          // working. In the future it will be moved to a 
+          // server specific process.
+          if (element.mount != null) {
+            const id = element.mount;
+            applyIndent(indent + 1);
+            fragment.mountPoints.push({
+              id,
+              part: fragment.html,
+            });
+            fragment.html = '';
+            applyIndent(indent);
+            break;
+          }
+
           if (!pr && tx != null) {
             element.text = tx;
           } else if (pr) {
@@ -427,6 +438,18 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
               }
 
               applyIndent(0);
+              break;
+            }
+            case 'mount': {
+              if (m2[3] == null) {
+                throw new Error('Mount points must have a name');
+              } else if (fragment.type !== 'root') {
+                throw new Error('Mounting is only allowed on a root element');
+              }
+
+              fragment.mountable = true;
+              element.mount = m2[3].trim();
+              break;
             }
           }
 
@@ -501,6 +524,14 @@ export function longform(doc: string, debug: (...d: unknown[]) => void = () => {
     fragment.refs = [];
 
     return fragment;
+  }
+
+  if (root?.mountable) {
+    output.mountable = true;
+    output.tail = root.html;
+    output.mountPoints = root.mountPoints;
+
+    return output;
   }
 
   for (let i = 0; i < parsed.size + 1; i++) {

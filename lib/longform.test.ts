@@ -9,6 +9,7 @@ import { parse, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import * as prettier from 'prettier';
+import {execPath} from 'node:process';
 
 async function validate(html: string, type: 'html' | 'xml' = 'html'): Promise<boolean> {
   return true;
@@ -301,7 +302,7 @@ const html9 = `\
 const template9 = `\
 <div id="my-template" aria-label="Something something 4">Hello world!</div>\
 `;
-test('It renders templated element fragments', () => {
+test('It renders templated element fragments', { only: true }, () => {
   const parsed = longform(lf9);
   console.log(parsed)
   const res = processTemplate(parsed.templates['my-template'], { position: 4 }, x => {
@@ -311,5 +312,36 @@ test('It renders templated element fragments', () => {
   assert.equal(parsed.fragments['other-fragment'].html, html9);
   assert.equal(res, template9);
 });
+
+const lf10 = `
+@root
+@doctype:: html
+html::
+  @mount:: head
+  head::
+  body::
+    @mount:: header
+    header::
+    @mount:: main
+    main::
+    @mount:: footer
+`;
+test('It breaks mount points up into individual dom slices', () => {
+  const parsed = longform(lf10, console.log);
+
+  console.log(parsed);
+
+  assert(parsed.mountable);
+  assert.equal(parsed.mountPoints[0].id, 'head');
+  assert.equal(parsed.mountPoints[0].part, '<!doctype html><html><head data-lf-mount="head">');
+  assert.equal(parsed.mountPoints[1].id, 'header');
+  assert.equal(parsed.mountPoints[1].part, '</head><body><header data-lf-mount="header">');
+  assert.equal(parsed.mountPoints[2].id, 'main');
+  assert.equal(parsed.mountPoints[2].part, '</header><main data-lf-mount="main">');
+  assert.equal(parsed.tail, '</main></body></html>');
+});
+
+
+
 
 

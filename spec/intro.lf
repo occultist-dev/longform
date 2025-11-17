@@ -1001,14 +1001,6 @@ section::
           body::
             Edit me...
         }
-
-    dt#preprocess::
-      b:: <code>@preprocess</code>
-    dd::
-      p::
-        This directive should be used at the top level of a fragment to instruct
-        a Longform pre-processor to 
-
     
 
 
