@@ -288,7 +288,7 @@ section::
         rules appropriate for the context.
 
   p::
-    Finally, the work in progress Longform parser is small and fast. Currently at 1.8kb
+    Finally, the work in progress Longform parser is small and fast. Currently at 2.6kb
     when minified and gzipped and supporting most intended features for the browser environment.
     The parser is likely to grow but is unlikely to reach near the size of Commonmark at 47.6kb or
     Marked at 12kb. The parser is also fast, as it can complete its job by building up the 
