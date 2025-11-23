@@ -321,7 +321,7 @@ html::
   head::
   body::
     @mount:: header
-    header::
+    header.header::
     @mount:: main
     main::
     @mount:: footer
@@ -335,7 +335,7 @@ test('It breaks mount points up into individual dom slices', () => {
   assert.equal(parsed.mountPoints[0].id, 'head');
   assert.equal(parsed.mountPoints[0].part, '<!doctype html><html><head data-lf-mount="head">');
   assert.equal(parsed.mountPoints[1].id, 'header');
-  assert.equal(parsed.mountPoints[1].part, '</head><body><header data-lf-mount="header">');
+  assert.equal(parsed.mountPoints[1].part, '</head><body><header data-lf-mount="header" class="header">');
   assert.equal(parsed.mountPoints[2].id, 'main');
   assert.equal(parsed.mountPoints[2].part, '</header><main data-lf-mount="main">');
   assert.equal(parsed.tail, '</main></body></html>');
