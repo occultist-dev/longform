@@ -144,6 +144,9 @@ html[lang=en]::
           li::
             b::
               a[href=#templating]:: Templating
+          li::
+            b::
+              a[href=#content-sanitization]:: Content sanitization
 --        li::
 --          b::
 --            a[href=#mediatype]:: Mediatype
@@ -191,6 +194,7 @@ html[lang=en]::
       #[comments]
       #[embedding-fragments]
       #[templating]
+      #[content-sanitization]
       #[selecting-from-dom]
       #[mediatype]
       #[server-side-usage]
@@ -583,6 +587,19 @@ section::
       div::
         Text content with <em>some</em> native markup.
     }
+  
+  h3:: Chained elements
+  aside.notice::
+    p:: Chained elements have not been implemented by the Longform parser.
+  p::
+    Elements can be chained to create many elements in one line.
+  pre::
+    code:: {
+      menu::
+        li::a[href=/section1]::b:: Section 1
+        li::a[href=/section2]::b:: Section 2
+        li::a[href=/section3]::b:: Section 3
+    }
 
 #whitespace
 section::
@@ -643,6 +660,7 @@ section::
           script:: {{
             console.log('Hello, World!');
           }}
+          
           style:: {{
             div {
               color: red;
@@ -683,25 +701,32 @@ section::
 
   pre::
     code:: {
-      main#main::
-        #[wip-notice]
-        #[language-intro]
-        #[syntax]
-        #[fragments]
-        #[whitespace]
-        #[elements]
-        #[preformatted-blocks]
-        #[templating]
-        #[selecting-from-dom]
-        #[mediatype]
-        #[server-side-usage]
-        #[directives]
+      @root
+      @doctype:: html
+      html[lang=en]::
+        body:: 
+          header::
+            menu::
+              li::a[href=#section1]:: Section 1
+              li::a[href=#section2]:: Section 2
+          body::
+            #[section1]
+            #[section2]
+      
+      #section1
+      section::
+        ...
+      
+      #section2
+      section::
+        ...
     }
 
+ 
 #templating
 section::
   h2:: Templating
-  aside.notics::
+  aside.notice::
     p::
       Longform templates are intended for client side templating where Javascript may
       be creating new markup and may format local values into the Longform markup.
@@ -725,6 +750,113 @@ section::
       div::
         h3:: Recipe step #{position}
     }
+  
+  h3:: Templated markup
+  aside.notice::
+    p::
+      Templated markup has not been implemented in the Longform parser.
+  p::
+    Arbitary Longform and HTML strings can be inserted in a template using the double hash
+    variable expansion form. See <a href="#content-sanitization">content sanitization</a> for rules
+    on sanitizing untrusted input using this form.
+
+  pre::
+    code:: {
+      @template
+      @allow-elements:: strong em
+      div::
+        ##{markup}
+        
+
+
+#content-sanitization
+section::
+  h2:: Content sanitization
+  aside.notice::
+    p::
+      Content sanitization has not been implemented in the Longform parser.
+  p::
+    A Longform block can have sanitization rules applied to its content using the
+    <code>@allow-elements</code>, <code>@allow-attributes</code>,
+    <code>@allow-data-attributes</code>, <code>@allow-all</code> directives.
+    These directives are designed to play well with the
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer" target="_blank"><code>SanitizerConfig</code></a>
+    Web API, but for now a <a href="https://github.com/cure53/DOMPurify" target="_blank">sanitizer library</a>
+    must be shiped with the parser to apply the directive rules on any content.
+  p::
+    Sanitizer rules apply when expanding variables in a templating context using the
+    double hash expansion syntax <code>&num;&num;{var}</code> and in situations where
+    <code>@patchable</code> is used.
+
+  h3:: Sanitizer defaults
+  p::
+    Longform cannot sanitize raw HTML without having a sanitizer library parsing HTML input and
+    it cannot differenciate between text and HTML markup. If the double hash template expansion
+    is used in a situation where no sanitizer is configured the variable expansion SHOULD be ignored
+    by parser implementations.
+    Parsers MAY support an option to bypass this default document level behaviour.
+  p::
+    A document specifying no rules allowing elements, attributes or data attributes also SHOULD
+    ignore all input using the double hash variable expansion. Again, a parser might allow
+    equivilent options to the sanitizer directives to bypass this default behaviour.
+    
+  h3:: Element specific sanitizer rules
+  p::
+    A element can have rules applied allowing arbitary markup to be added to the document.
+    Either <code>@allow-elements</code> or <code>@allow-all</code> must be used to allow
+    any elements to persist.
+
+  pre::
+    code:: {
+      @template
+      #embedding-content
+      section::
+        header::
+          h2:: #{header}
+        @allow-elements:: strong em a[href target]
+        @allow-attributes: class
+        div::
+          ##{markup}
+    }
+  p::
+    Sanitization rules are inherited by child elements. So the following Longform would produce
+    the same results.
+  pre::
+    code:: {
+      @template
+      @allow-elements:: strong em a[href target]
+      @allow-attributes: class
+      #embedding-content
+      section::
+        header::
+          h2:: #{header}
+        div::
+          ##{markup}
+    }
+
+  h3:: Global settings
+  p::
+    Settings can be configured document wide using the <code>@global</code> directive from the
+    top level of the document. 
+    
+  pre::
+    code:: {
+      @global::
+        @allow-elements:: strong em a[href target]
+        @allow-attributes: class
+        
+      @template
+      #template1
+      section::
+        ##{markup}
+      
+      @template
+      #template2
+      section::
+        ##{markup}
+    }
+
+
 
 
 -- #mediatype
