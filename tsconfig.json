@@ -1,9 +1,21 @@
+
 {
   "compilerOptions": {
-    "module": "es2015",
-    "outDir": "."
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "preserveConstEnums": true,
+    "sourceRoot": "lib/mod.js",
+    "rootDir": "lib",
+    "declarationDir": "dist",
+    "outDir": "dist",
+    "sourceMap": true,
+    "noEmit": true,
+    "declaration": true,
   },
   "files": [
-    "./lib/longform.ts"
+    "lib/types.ts",
+    "lib/mod.ts",
+    "lib/longform.ts",
   ]
 }

@@ -1,11 +1,5 @@
 import type { FragmentType, ParsedResult, WorkingElement, WorkingFragment, Fragment } from "./types.ts";
 
-export type {
-  FragmentType,
-  Fragment,
-  ParsedResult
-};
-
 const sniffTestRe = /^(?:(?:(--).*)|(?: *(@|#).*)|(?: *[\w\-]+(?::[\w\-]+)?(?:[#.[][^\n]+)?(::).*)|(?:  +([\["]).*)|(\ \ .*))$/gmi
   , element1 = /((?:\ \ )+)? ?([\w\-]+(?::[\w\-]+)?)([#\.\[][^\n]*)?::(?: ({{?|[^\n]+))?/gmi
   , directive1 = /((?:\ \ )+)? ?@([\w][\w\-]+)(?::: ?([^\n]+)?)?/gmi

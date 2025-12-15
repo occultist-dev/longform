@@ -1,70 +1,18 @@
-declare module "types" {
-    export type WorkingElement = {
-        indent: number;
-        key?: string;
-        id?: string;
-        tag?: string;
-        class?: string;
-        attrs: Record<string, string | null>;
-        text?: string;
-        html: string;
-        mount?: string;
-    };
-    export type WorkingFragmentType = 'root' | 'embed' | 'bare' | 'range' | 'text' | 'mount' | 'template';
-    export type FragmentType = 'embed' | 'bare' | 'range' | 'text';
-    export type FragmentRef = {
-        id: string;
-        start: number;
-        end: number;
-    };
-    export type WorkingFragment = {
-        id?: string;
-        template: boolean;
-        mountable: boolean;
-        type: WorkingFragmentType;
-        html: string;
-        refs: FragmentRef[];
-        els: WorkingElement[];
-        mountPoints: MountPoint[];
-    };
-    export type Fragment = {
-        id: string;
-        selector: string;
-        type: FragmentType;
-        html: string;
-    };
-    export type MountPoint = {
-        id: string;
-        part: string;
-    };
-    export type ParsedResult = {
-        mountable?: boolean;
-        root: string | null;
-        selector: string | null;
-        mountPoints: MountPoint[];
-        tail?: string;
-        fragments: Record<string, Fragment>;
-        templates: Record<string, string>;
-    };
-}
-declare module "longform" {
-    import type { FragmentType, ParsedResult, Fragment } from "types";
-    export type { FragmentType, Fragment, ParsedResult };
-    /**
-     * Parses a longform document into a object containing the root and fragments
-     * in the output format.
-     *
-     * @param {string} doc - The longform document to parse.
-     * @returns {ParsedResult}
-     */
-    export function longform(doc: string, debug?: (...d: unknown[]) => void): ParsedResult;
-    /**
-     * Processes a client side Longform template to HTML fragment string.
-     *
-     * @param fragment    - The fragment identifier.
-     * @param args        - A record of template arguments.
-     * @param getFragment - A function which returns an already processed fragment's HTML string.
-     * @returns The processed template.
-     */
-    export function processTemplate(template: string, args: Record<string, string | number>, getFragment: (fragment: string) => string | undefined): string | undefined;
-}
+import type { ParsedResult } from "./types.ts";
+/**
+ * Parses a longform document into a object containing the root and fragments
+ * in the output format.
+ *
+ * @param {string} doc - The longform document to parse.
+ * @returns {ParsedResult}
+ */
+export declare function longform(doc: string, debug?: (...d: unknown[]) => void): ParsedResult;
+/**
+ * Processes a client side Longform template to HTML fragment string.
+ *
+ * @param fragment    - The fragment identifier.
+ * @param args        - A record of template arguments.
+ * @param getFragment - A function which returns an already processed fragment's HTML string.
+ * @returns The processed template.
+ */
+export declare function processTemplate(template: string, args: Record<string, string | number>, getFragment: (fragment: string) => string | undefined): string | undefined;
