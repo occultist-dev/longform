@@ -11,11 +11,11 @@
     "outDir": "dist",
     "sourceMap": true,
     "noEmit": true,
-    "declaration": true,
+    "declaration": true
   },
   "files": [
     "lib/types.ts",
     "lib/mod.ts",
-    "lib/longform.ts",
+    "lib/longform.ts"
   ]
 }

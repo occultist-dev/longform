@@ -38,8 +38,8 @@ export type MountPoint = {
 };
 export type ParsedResult = {
     mountable?: boolean;
-    root: string | null;
-    selector: string | null;
+    root?: string;
+    selector?: string;
     mountPoints: MountPoint[];
     tail?: string;
     fragments: Record<string, Fragment>;
