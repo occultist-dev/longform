@@ -4,7 +4,7 @@
   "author": "Matthew Quinn",
   "homepage": "https://github.com/occultist-dev/longform",
   "license": "MIT",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "main": "dist/longform.js",
   "types": "dist/mod.d.ts",
