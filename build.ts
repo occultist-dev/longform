@@ -9,7 +9,7 @@ import {rollup} from 'rollup';
 
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const spec = resolve(dir, 'spec/intro.lf');
+const spec = resolve(dir, 'spec/spec.lf');
 const mod = resolve(dir, 'dist/longform.js');
 const docs = resolve(dir, 'docs');
 

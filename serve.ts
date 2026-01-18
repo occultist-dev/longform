@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const spec = resolve(dir, 'spec/intro.lf');
+const spec = resolve(dir, 'spec/spec.lf');
 const mod = resolve(dir, 'lib/longform.ts');
 const docs = resolve(dir, 'docs');
 

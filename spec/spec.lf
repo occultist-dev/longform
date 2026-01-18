@@ -216,10 +216,11 @@ section::
   p::
     <b class=keyword>Longform</b> is an easy to read markup and templating
     language that outputs to <b class=keyword>HTML</b> and <b class=keyword>XML</b>.
-    A longform document can be parsed to a complete document in the output format
-    or as fragments to be used by a application as a source of markup when generating a
-    document, or when manipulating DOM in a browser environment.
+    A Longform document can be parsed to a complete document in the output format
+    or as fragments to be used by an application as a source of markup when generating a
+    document, or manipulating DOM in a browser environment.
 
+  h3:: Example
   pre::
     code:: {
       header::
@@ -231,7 +232,8 @@ section::
             XML</b> document fragments.
     }
   details::
-    summary:: Result
+    summary::
+      h3:: Result
     pre::
       samp:: {
         <header>
@@ -285,7 +287,7 @@ section::
   aside#template-sanitization-example::
     p::
       small::
-        In a longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
+        In a Longform template the <code>#{title}</code> variable expansion escapes any unsafe HTML
         and XML entities whereas the <code>##{content}</code> expansion will filter any elements
         and attributes not explicitly allowed by the directive from the resulting markup. These
         directives can be used many times through a document allowing user defined markup to have
@@ -305,29 +307,37 @@ section::
 
   aside::
     p::
-      Longform's primary design goal is to output fragments of HTML in a form that can be
-      rendered by another program into a complete HTML document, and when loaded as DOM in a
-      browser, the fragments can be re-selected and referenced by a Javascript runtime. Since
-      all Longform fragments are static content a Javascript runtime can re-use the
-      existing DOM (or clones of) created from a Longform fragment and avoid hydration or
-      re-rendering techniques that are often used by client side libraries, instead making
-      sure that an equivilent DOM node is located in the correct location within the DOM
-      if the runtime is rendering content around it.
+      Longform's primary design goal is to output fragments of HTML into a form that can be
+      merged with other sources and rendered into a complete document by another program, and
+      to do so in such a way that a client side runtime can extract the fragments from rendered
+      <b class=keyword>DOM</b> and re-use those fragments in a client application without
+      transporting data in another form.
     p::
-      To achieve this, depending on the fragment kind, a parser will embed HTML ids or data
-      attributes in a fragment and expose valid selectors so the fragments can
-      later be selected from the DOM.
+      To achieve this, depending on the fragment kind, a Longform parser will embed HTML ids or data
+      attributes in a fragment and export additional meta information that can be embedded
+      into the rendered document for the client runtime to extract the fragments from the
+      rendered DOM.
     p::
-      Aside from the root fragment, all fragments should have a unique Longform identifier
-      assigned to them so they can be referenced within the document or from the parsed
-      content.
+      Note that not all fragment kinds can be transported once in the rendered document without
+      duplication. Text fragments allow the client to present messages where HTML markup is not
+      supported. For example if a client was to dynamically render an <code>aria-label<code> value,
+      any included HTML markup would be presented or read to the user as text. By not having HTML markup
+      wrapping the content there is no predicable and straightforward method for annotating the
+      text fragment so the runtime can extract it from the DOM.
+    p::
+      However, allowing text only fragments makes Longform a suitable format for transporting
+      all translatable text and markup in the language specified by the client. If all textual content
+      is placed in a Longform document for a given language, and merged into non-textual content
+      to make a complete webpage, only the Longform document will require translation to support
+      other languages; even if the page has lots of textual content embedded in interactive
+      content rendered by the runtime.
 
   h3:: The root fragment
   p::
     The root fragment is an optional fragment that has no Longform identifier. There can be
     only one root fragment in a Longform document. 
   p::
-    The root element of the root fragment has no whitespace preceeding it. The fragment
+    The root element of the root fragment has no whitespace preceding it. The fragment
     has no Longform identifier but the root element can have a HTML identifier defined on
     it.
   p::
@@ -339,6 +349,7 @@ section::
     a <b class=keyword>HTML</b> doctype or <b class=keyword>XML</b> declaration prefixing
     the output markup.
 
+  h3:: Example
   pre::
     code:: {
       @doctype:: html
@@ -350,7 +361,8 @@ section::
     }
 
   details::
-    summary:: Result
+    summary::
+      h3:: Result
     pre::
       samp:: {
         <!doctype html>
@@ -364,13 +376,13 @@ section::
         </html>
       }
 
-  h3:: Fragments with embedded identifiers
+  h3:: Embedded fragment identifiers
   p::
     Fragments can have their Longform identifier embedded into the output markup as
     a HTML or XML id. Embedded ids should be unique to both the target document and Longform
     document. If a Longform fragment references a fragment with an embedded identifier, any
     other attempts to reference the embedded fragment will be ignored by the Longform
-    parser. Fragments with embeded identifiers will also not be exported to be directly
+    parser. Fragments with embedded identifiers will also not be exported to be directly
     referenced by external software if they have been referenced in the Longform document.
 
   pre::
@@ -431,7 +443,7 @@ section::
         title:: The range fragment
         meta::
           [name=description]
-          [content=Demonstraiting the range fragment]
+          [content=Demonstrating the range fragment]
       ]
     }
 
@@ -441,13 +453,13 @@ section::
       samp::
         code:: {
           <title data-lf="head-details">A range of fragments</title>
-          <meta data-lf="head-details" name="description" content="Demonstraiting the range fragment" />
+          <meta data-lf="head-details" name="description" content="Demonstrating the range fragment" />
         }
 
   h3:: Text fragments
   p::
     Text fragments do not include any elements. Programs using Longform output can use text fragments
-    in locations where elements are not allowed such as HTML attributes. Text fragments are particulaly
+    in locations where elements are not allowed such as HTML attributes. Text fragments are particularly
     useful where Longform is being used as a master document for all translated copy for a webpage.
 
   pre::
@@ -500,9 +512,9 @@ section::
     }
 
   p::
-    If an element is declared multiple times the content is concatinated
+    If an element is declared multiple times the content is concatenated
     into a single value. This behaviour does not apply to the element's id
-    if it is defined using the attribute syntax. Classes will be concatinated
+    if it is defined using the attribute syntax. Classes will be concatenated
     with a space separating them.
   pre::
     code:: {
@@ -695,7 +707,7 @@ section::
 section::
   h2:: Embedding fragments
   p::
-    Fragments can be embedded into other fragments as part of the longform parsing
+    Fragments can be embedded into other fragments as part of the Longform parsing
     allowing a full document to be created from many fragments. Fragments are
     embedded using the syntax &num;[fragment-id].
 
@@ -733,8 +745,8 @@ section::
       Future versions of this spec will include pre-processing rules for generating
       Longform documents using server side state and logic within the document.
     p::
-      When a longform document is processed, any templates will be provided as strings
-      intented to be re-processed using a separate template processing function which
+      When a Longform document is processed, any templates will be provided as strings
+      indented to be re-processed using a separate template processing function which
       knows how to expand any variables in the template.
 
   p::
@@ -996,10 +1008,10 @@ section::
     dd::
       p::
         Marks a fragment as being a client side template. When a fragment
-        is a template the longform parser skips formatting the fragment
+        is a template the Longform parser skips formatting the fragment
         and outputs it separately to the processed fragments to be passed through
         to the client. Client side logic can then pass the template into
-        a special longform template parser and have the HTML output returned.
+        a special Longform template parser and have the HTML output returned.
       pre::
         code:: {
           @template
