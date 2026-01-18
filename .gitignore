@@ -1,5 +1,5 @@
-.zed
 .yalc
+.vim
 node_modules
 yalc.lock
 package.tgz

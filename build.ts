@@ -8,10 +8,10 @@ import {createBrotliCompress, createGzip} from "node:zlib";
 import {rollup} from "rollup";
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const spec = resolve(dir, "spec/intro.lf");
 const dist = resolve(dir, "dist");
-const mod = resolve(dir, "dist/longform.js");
-const docs = resolve(dir, "docs");
+const spec = resolve(dir, 'spec/spec.lf');
+const mod = resolve(dir, 'dist/longform.js');
+const docs = resolve(dir, 'docs');
 
 async function html() {
   const { longform } = await import(pathToFileURL(mod).toString());
