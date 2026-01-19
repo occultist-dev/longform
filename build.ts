@@ -18,7 +18,7 @@ async function html() {
   const doc = await readFile(spec, "utf-8");
   const output = longform(doc);
 
-  await writeFile(resolve(dir, "docs/index.html"), output.root);
+  await writeFile(resolve(dir, "index.html"), output.root);
 }
 
 async function gzip(input: string, output: string) {

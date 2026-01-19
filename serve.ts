@@ -21,7 +21,7 @@ async function writeHTML() {
   const doc = await readFile(spec, 'utf-8');
   const output = longform(doc);
 
-  await writeFile(resolve(dir, 'docs/index.html'), output.root);
+  await writeFile(resolve(dir, 'index.html'), output.root);
 
   console.log('Updated');
 }
@@ -41,7 +41,7 @@ console.log('Watching', mod);
 const server = createServer(async (_req, res) => {
   await writeHTML();
   
-  const file = await readFile(resolve(dir, 'docs/index.html'));
+  const file = await readFile(resolve(dir, 'index.html'));
   res.writeHead(200, {
     "content-type": 'text/html',
   });

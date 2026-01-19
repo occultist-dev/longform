@@ -320,7 +320,7 @@ section::
     p::
       Note that not all fragment kinds can be transported once in the rendered document without
       duplication. Text fragments allow the client to present messages where HTML markup is not
-      supported. For example if a client was to dynamically render an <code>aria-label<code> value,
+      supported. For example if a client was to dynamically render an <code>aria-label</code> value,
       any included HTML markup would be presented or read to the user as text. By not having HTML markup
       wrapping the content there is no predicable and straightforward method for annotating the
       text fragment so the client can extract it from the DOM.
