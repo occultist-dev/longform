@@ -315,7 +315,7 @@ section::
     p::
       To achieve this, depending on the fragment kind, a Longform parser will embed HTML ids or data
       attributes in a fragment and export additional meta information that can be embedded
-      into the rendered document for the client runtime to extract the fragments from the
+      into the rendered document to assist the client when extracting the fragments from the
       rendered DOM.
     p::
       Note that not all fragment kinds can be transported once in the rendered document without
@@ -323,14 +323,14 @@ section::
       supported. For example if a client was to dynamically render an <code>aria-label<code> value,
       any included HTML markup would be presented or read to the user as text. By not having HTML markup
       wrapping the content there is no predicable and straightforward method for annotating the
-      text fragment so the runtime can extract it from the DOM.
+      text fragment so the client can extract it from the DOM.
     p::
       However, allowing text only fragments makes Longform a suitable format for transporting
       all translatable text and markup in the language specified by the client. If all textual content
       is placed in a Longform document for a given language, and merged into non-textual content
       to make a complete webpage, only the Longform document will require translation to support
       other languages; even if the page has lots of textual content embedded in interactive
-      content rendered by the runtime.
+      content rendered by the client.
 
   h3:: The root fragment
   p::
@@ -778,7 +778,6 @@ section::
       @allow-elements:: strong em
       div::
         ##{markup}
-        
 
 
 #content-sanitization
@@ -794,7 +793,7 @@ section::
     These directives are designed to play well with the
     <a href="https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer" target="_blank"><code>SanitizerConfig</code></a>
     Web API, but for now a <a href="https://github.com/cure53/DOMPurify" target="_blank">sanitizer library</a>
-    must be shiped with the parser to apply the directive rules on any content.
+    must be shipped with the parser to apply the directive rules on any content.
   p::
     Sanitizer rules apply when expanding variables in a templating context using the
     double hash expansion syntax <code>&num;&num;{var}</code> and in situations where
@@ -803,14 +802,14 @@ section::
   h3:: Sanitizer defaults
   p::
     Longform cannot sanitize raw HTML without having a sanitizer library parsing HTML input and
-    it cannot differenciate between text and HTML markup. If the double hash template expansion
+    it cannot differentiated between text and HTML markup. If the double hash template expansion
     is used in a situation where no sanitizer is configured the variable expansion SHOULD be ignored
     by parser implementations.
     Parsers MAY support an option to bypass this default document level behaviour.
   p::
     A document specifying no rules allowing elements, attributes or data attributes also SHOULD
     ignore all input using the double hash variable expansion. Again, a parser might allow
-    equivilent options to the sanitizer directives to bypass this default behaviour.
+    equivalent options to the sanitizer directives to bypass this default behaviour.
     
   h3:: Element specific sanitizer rules
   p::
@@ -867,8 +866,6 @@ section::
       section::
         ##{markup}
     }
-
-
 
 
 -- #mediatype
