@@ -333,9 +333,9 @@ section::
     Most Longform fragments have a Longform identifier that appears before the their markup block. When
     the Longform document is parsed and exported to the parent program, each fragment, if exported,
     will be referencable by its fragment identifier. Within the Longform document fragments can also
-    embed other fragments using the syntax <code>&num;[frag]</code>. This behaviour is described in detail
+    embed other fragments using the syntax <code>&num;[other-identifier]</code>. This behaviour is described in detail
     in the <a href="#embedding-fragments">Embedding fragments section</a>. Some fragments identifiers
-    are intended to be unique to the document, and will not embed twice, or be exported if used within the
+    are intended to be unique to the document and will not embed twice, or be exported if used within the
     document.
 
   h3:: The Root Fragment
@@ -379,12 +379,27 @@ section::
       }
 
   h3:: Embedded fragment identifiers
+  aside::
+    p::
+      Fragments can have their Longform identifier embedded into the output markup as
+      a HTML id. Embedded fragment identifiers should be unique to both the target document
+      and Longform document. If a Longform fragment references a fragment with an embedded
+      identifier, any other attempts to reference the embedded fragment will be ignored by the
+      Longform parser and the fragment will not be exported.
   p::
-    Fragments can have their Longform identifier embedded into the output markup as
-    a HTML or XML id. Embedded fragment identifiers should be unique to both the target document
-    and Longform document. If a Longform fragment references a fragment with an embedded
-    identifier, any other attempts to reference the embedded fragment will be ignored by the
-    Longform parser and the fragment will not be exported.
+    Embedded fragment identifiers begin with a single <code>#</code> hash character followed by
+    a single ASCII letter, optionally followed by many letters, numbers, hyphens and underscores
+    within the ASCII character range.
+  p::
+    The fragment identifier cannot have any whitespace or other characters preceding it on
+    its line. Only whitespace can follow the fragment identifier, and apart from line breaks,
+    should be ignored by the Longform parser.
+  p::
+    The Longform markup block following the identifier must be declared on a line following
+    the fragment identifier and can only be separated by lines of white space or comments.
+    The fragment's markup block must have a single outermost element declared in the
+    Longform syntax and not as HTML. No whitespace can precede the declaration of the outer
+    element.
 
   h4:: Example element with an embedded identifier
   pre::
@@ -407,11 +422,27 @@ section::
         }
   
   h3:: Bare fragments
+  aside::
+    p::
+      Bare fragments have Longform identifiers that can be referenced many times within the same
+      Longform document and are always outputted to be used by the external program. Parsers should
+      write the given Longform identifier to the outer most element to the output markup as a data
+      attribute by any Longform parser implementation to allow selection of the fragment in
+      a DOM environment.
   p::
-    Bare fragments have Longform identifiers that can be referenced many times within the same
-    Longform document and are always outputted to be used by external software. The given
-    Longform identifier should be written to the output markup as a data attribute by any
-    Longform parser implementation to allow selection of the fragment in a DOM environment.
+    Bare fragment identifiers begin with two <code>#</code> hash characters followed by
+    a single ASCII letter, optionally followed by many letters, numbers, hyphens and underscores
+    within the ASCII character range.
+  p::
+    The fragment identifier cannot have any whitespace or other characters preceding it on
+    its line. Only whitespace can follow the fragment identifier, and apart from line breaks,
+    should be ignored by the Longform parser.
+  p::
+    The Longform markup block following the identifier must be declared on a line following
+    the fragment identifier and can only be separated by lines of white space or comments.
+    The fragment's markup block must have a single outermost element declared in the
+    Longform syntax and not as HTML.
+
   pre::
     code:: {
       ##alert-something-went-wrong
@@ -420,7 +451,6 @@ section::
           strong:: Something went wrong!
         form[method=dialog]::
           button:: Close
-
     }
   details::
     summary:: Result
@@ -429,16 +459,35 @@ section::
         code:: {
           <dialog data-lf="alert-something-went-wrong" open class="error">
             <strong>Something went wrong!</strong>
+
             <form method="dialog">
-              <button>Close</botton>
+              <button>Close</button>
             </form>
           </dialog>
         }
 
   h3:: Range fragments
+  aside::
+    p::
+      Range fragments can have more than one topmost element which are outputted as siblings.
+      Each element should have a HTML data attribute specifying its Longform identifier, and the
+      first element in the range should have a data attribute specifying it is the first element
+      to avoid having a duplicated range being merged together into a single Range fragment in
+      the client.
   p::
-    Range fragments can have more than one topmost element which are outputted as siblings.
-    All top-most elements of the range fragment would have the same data attribute.
+    Range fragment identifiers begin with a single <code>#</code> hash character followed by
+    a single ASCII letter, optionally followed by many letters, numbers, hyphens and underscores
+    within the ASCII character range. The range fragment type is identified by an <code>[</code>
+    opening square brace separated from the identifier by whitespace.
+  p::
+    The fragment identifier cannot have any whitespace or other characters preceding it on
+    its line. Only whitespace can follow the fragment identifier and the opening brace, and
+    apart from line breaks, should be ignored by the Longform parser.
+  p::
+    The Longform markup block following the identifier must be declared on a line following
+    the fragment identifier and can only be separated by lines of white space or comments.
+    The fragment's markup block must have a single outermost element declared in the
+    Longform syntax and not as HTML.
 
   pre::
     code:: {
